@@ -1,5 +1,7 @@
 import { initGame, makeMove, skipAndDraw, checkWin, isValidGroup, getAIMove, getJokerRepresentation } from './rummikub-game.js';
 
+const COLOR_LABELS = { red: 'R', blue: 'B', yellow: 'Y', black: 'K' };
+
 let gameState = null;
 let pendingRack = null;
 let pendingBoard = null;
@@ -8,6 +10,7 @@ let selectedTileIds = new Set();
 let selectedGroupIdx = -1;
 let isProcessing = false;
 let dragData = null;
+let consecutiveEmptySkips = 0;
 
 setupEventListeners();
 showStartScreen();
@@ -232,13 +235,13 @@ function commitTileMove(tileId, sourceType, sourceGroupIdx, targetIdx, newTarget
   afterTileMove();
 }
 
-function afterTileMove() {
+function afterTileMove(skipMsg = false) {
   pendingBoard = pendingBoard.filter(g => g.length > 0).map(g => sortGroup(g));
   selectedTileIds.clear();
   selectedGroupIdx = -1;
   updateControls();
   renderAll();
-  if (dragData) {
+  if (dragData && !skipMsg) {
     const msg = dragData.sourceType === 'rack' ? 'Tile played' : 'Tile moved';
     showMessage(msg, 'success');
   }
@@ -253,7 +256,9 @@ function handleRackDrop(e) {
 
   pendingRack.push(tile);
   pendingBoard[sourceGroupIdx] = pendingBoard[sourceGroupIdx].filter(t => t.id !== tileId);
-  afterTileMove();
+  selectedTileIds.clear();
+  selectedGroupIdx = -1;
+  afterTileMove(true);
   showMessage('Tile returned to rack', 'info');
 }
 
@@ -265,6 +270,7 @@ function startGame(mode, difficulty) {
   selectedTileIds = new Set();
   selectedGroupIdx = -1;
   isProcessing = false;
+  consecutiveEmptySkips = 0;
   startTurn();
 }
 
@@ -313,13 +319,15 @@ function doAITurn() {
       if (result.success) {
         gameState = result.newState;
       } else {
+        console.error('AI move rejected:', result.errorMsg);
         const drawResult = skipAndDraw(gameState);
         gameState = drawResult.newState;
       }
     }
   } catch (e) {
-    try { const r = skipAndDraw(gameState); gameState = r.newState; } catch (_) {}
     console.error('AI error:', e);
+    showMessage('AI encountered an error and will skip', 'error');
+    try { const r = skipAndDraw(gameState); gameState = r.newState; } catch (_) {}
   }
 
   isProcessing = false;
@@ -330,11 +338,9 @@ function doAITurn() {
       showGameOver(winner);
       return;
     }
-  } catch (_) {}
-
-  try {
-    renderAll();
-  } catch (_) {}
+  } catch (_) {
+    console.error('checkWin error');
+  }
 
   try {
     startTurn();
@@ -386,7 +392,20 @@ function submitTurn() {
     return;
   }
 
-  const result = makeMove(gameState, tilesToPlay, pendingBoard, jokerReplacements);
+  const player = gameState.players[gameState.currentPlayerIndex];
+  let manipulatedGroups;
+  if (!player.hasMelded) {
+    const playedIdsSet = new Set(tilesToPlay.map(t => t.id));
+    manipulatedGroups = pendingBoard.filter(group =>
+      group.some(t => playedIdsSet.has(t.id))
+    );
+  } else {
+    manipulatedGroups = pendingBoard;
+  }
+
+  consecutiveEmptySkips = 0;
+
+  const result = makeMove(gameState, tilesToPlay, manipulatedGroups, jokerReplacements);
 
   if (!result.success) {
     showMessage(result.errorMsg, 'error');
@@ -413,7 +432,6 @@ function submitTurn() {
 function handleTurnTransition() {
   const nextPlayer = gameState.players[gameState.currentPlayerIndex];
   if (gameState.mode === 'single') {
-    try { renderAll(); } catch (_) {}
     setTimeout(startTurn, 50);
   } else {
     renderAll();
@@ -473,7 +491,23 @@ function drawAndSkip() {
   selectedTileIds = new Set();
   selectedGroupIdx = -1;
 
-  showMessage(result.drawnTile ? 'Drew a tile and skipped' : 'Pool is empty, skipped', 'info');
+  if (!result.drawnTile) {
+    consecutiveEmptySkips++;
+    if (consecutiveEmptySkips >= gameState.players.length) {
+      const scores = gameState.players.map(p => ({
+        id: p.id,
+        score: p.rack.reduce((s, t) => s + (t.isJoker ? 30 : t.value), 0)
+      }));
+      scores.sort((a, b) => a.score - b.score);
+      showMessage(`Pool empty - ${scores[0].id} wins with ${scores[0].score} points!`, 'success');
+      setTimeout(() => showGameOver(scores[0].id), 1500);
+      return;
+    }
+    showMessage(`Pool is empty, skipped (${consecutiveEmptySkips}/${gameState.players.length})`, 'info');
+  } else {
+    consecutiveEmptySkips = 0;
+    showMessage('Drew a tile and skipped', 'info');
+  }
 
   const winner = checkWin(gameState);
   if (winner) {
@@ -568,7 +602,8 @@ function renderBoard() {
     if (canSelect) groupEl.style.cursor = 'pointer';
 
     group.forEach(tile => {
-      groupEl.appendChild(createTileElement(tile, { clickable: false, selected: false }));
+      const jokerRepr = tile.isJoker ? getJokerRepresentation(group) : null;
+      groupEl.appendChild(createTileElement(tile, { clickable: false, selected: false, jokerRepr }));
     });
 
     container.appendChild(groupEl);
@@ -628,7 +663,9 @@ function createTileElement(tile, opts = {}) {
   if (tile.id !== undefined) {
     div.dataset.id = String(tile.id);
   }
-  if (!isProcessing) {
+
+  const isAiTurn = gameState && gameState.players[gameState.currentPlayerIndex]?.id === 'AI';
+  if (!isProcessing && !isAiTurn) {
     div.draggable = true;
   }
 
@@ -637,7 +674,13 @@ function createTileElement(tile, opts = {}) {
   }
 
   if (tile.isJoker) {
-    div.innerHTML = '<span class="tile-value">★</span>';
+    const repr = opts.jokerRepr;
+    if (repr) {
+      const colorLabel = COLOR_LABELS[repr.color] || repr.color[0].toUpperCase();
+      div.innerHTML = `<span class="tile-value">★</span><span class="tile-sub">${colorLabel}${repr.value}</span>`;
+    } else {
+      div.innerHTML = '<span class="tile-value">★</span>';
+    }
   } else {
     div.innerHTML = `<span class="tile-value">${tile.value}</span>`;
   }

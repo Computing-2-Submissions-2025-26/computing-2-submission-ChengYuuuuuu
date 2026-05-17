@@ -258,6 +258,18 @@ body {
 .tile.joker {
   background: linear-gradient(135deg, #8e44ad, #e74c3c, #f39c12);
   color: #fff;
+  position: relative;
+}
+
+.tile.joker .tile-sub {
+  font-size: 0.55rem;
+  font-weight: bold;
+  position: absolute;
+  bottom: 3px;
+  background: rgba(0,0,0,0.35);
+  padding: 1px 4px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
 }
 
 .tile.in-rack {
