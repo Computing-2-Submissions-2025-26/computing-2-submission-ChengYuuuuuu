@@ -86,6 +86,35 @@ function findPendingTile(tileId) {
   return (pendingRack || []).find(t => t.id === tileId);
 }
 
+function sortGroup(group) {
+  if (group.length <= 1) return group;
+  const nonJokers = group.filter(t => !t.isJoker);
+  if (nonJokers.length === 0) return group;
+  const allSameValue = nonJokers.every(t => t.value === nonJokers[0].value);
+  if (allSameValue) {
+    const colorOrder = ['red', 'blue', 'yellow', 'black'];
+    return [...group].sort((a, b) => {
+      if (a.isJoker) return 1; if (b.isJoker) return -1;
+      return colorOrder.indexOf(a.color) - colorOrder.indexOf(b.color);
+    });
+  }
+  return [...group].sort((a, b) => {
+    if (a.isJoker) return 1; if (b.isJoker) return -1;
+    return a.value - b.value;
+  });
+}
+
+function getInsertIndex(groupEl, clientX) {
+  const tileEls = groupEl.querySelectorAll('.tile');
+  let pos = 0;
+  for (const el of tileEls) {
+    const rect = el.getBoundingClientRect();
+    if (clientX < rect.left + rect.width / 2) return pos;
+    pos++;
+  }
+  return pos;
+}
+
 function trySnapToGroup(group, tile) {
   if (group.length === 0) return 0;
   if (group.length < 3) return group.length;
@@ -132,11 +161,8 @@ function handleGroupDragEnter(e) {
   if (!dragData) return;
   const groupEl = e.target.closest('.board-group');
   if (!groupEl) return;
-  const idx = parseInt(groupEl.dataset.index, 10);
-  if (isNaN(idx) || idx < 0 || idx >= pendingBoard.length) return;
-  const snapIdx = trySnapToGroup(pendingBoard[idx], dragData.tile);
   groupEl.classList.remove('drop-valid', 'drop-invalid');
-  groupEl.classList.add(snapIdx !== -1 ? 'drop-valid' : 'drop-invalid');
+  groupEl.classList.add('drop-valid');
 }
 
 function handleGroupDragLeave(e) {
@@ -161,32 +187,25 @@ function handleBoardDrop(e) {
   if (groupEl) {
     const targetIdx = parseInt(groupEl.dataset.index, 10);
     if (isNaN(targetIdx)) return;
-    performGroupDrop(tileId, sourceType, sourceGroupIdx, tile, targetIdx);
+    const insertAt = getInsertIndex(groupEl, e.clientX);
+    performGroupDrop(tileId, sourceType, sourceGroupIdx, tile, targetIdx, insertAt);
   } else if (e.currentTarget === document.getElementById('board-groups')) {
     performNewGroupDrop(tileId, sourceType, sourceGroupIdx, tile);
   }
 }
 
-function performGroupDrop(tileId, sourceType, sourceGroupIdx, tile, targetIdx) {
+function performGroupDrop(tileId, sourceType, sourceGroupIdx, tile, targetIdx, insertAt) {
   if (sourceType === 'board' && sourceGroupIdx === targetIdx) {
     const group = pendingBoard[sourceGroupIdx];
     const filtered = group.filter(t => t.id !== tileId);
-    const snapIdx = trySnapToGroup(filtered, tile);
-    if (snapIdx === -1 || snapIdx === group.findIndex(t => t.id === tileId)) return;
-    pendingBoard[sourceGroupIdx] = [...filtered.slice(0, snapIdx), tile, ...filtered.slice(snapIdx)];
+    pendingBoard[sourceGroupIdx] = sortGroup([...filtered.slice(0, insertAt), tile, ...filtered.slice(insertAt)]);
     afterTileMove();
     return;
   }
 
-  const targetGroup = pendingBoard[targetIdx];
-  if (!targetGroup) return;
-
-  const snapIdx = trySnapToGroup(targetGroup, tile);
-  if (snapIdx === -1) return;
-
-  const newTarget = [...targetGroup.slice(0, snapIdx), tile, ...targetGroup.slice(snapIdx)];
-
-  commitTileMove(tileId, sourceType, sourceGroupIdx, targetIdx, newTarget);
+  commitTileMove(tileId, sourceType, sourceGroupIdx, targetIdx, sortGroup(
+    [...pendingBoard[targetIdx].slice(0, insertAt), tile, ...pendingBoard[targetIdx].slice(insertAt)]
+  ));
 }
 
 function performNewGroupDrop(tileId, sourceType, sourceGroupIdx, tile) {
@@ -214,7 +233,7 @@ function commitTileMove(tileId, sourceType, sourceGroupIdx, targetIdx, newTarget
 }
 
 function afterTileMove() {
-  pendingBoard = pendingBoard.filter(g => g.length > 0);
+  pendingBoard = pendingBoard.filter(g => g.length > 0).map(g => sortGroup(g));
   selectedTileIds.clear();
   selectedGroupIdx = -1;
   updateControls();
