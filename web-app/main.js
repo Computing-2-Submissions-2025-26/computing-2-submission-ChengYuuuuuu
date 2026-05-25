@@ -327,31 +327,68 @@ function animateAIMove(tilesToPlay, newGameState) {
   const aiPlayer = gameState.players[gameState.currentPlayerIndex];
   const playedIds = new Set(tilesToPlay.map(t => t.id));
 
-  // Phase 1: Show current state
   showMessage('AI is thinking...', 'info');
 
   setTimeout(() => {
-    // Phase 2: Show tiles leaving AI's rack
     pendingRack = JSON.parse(JSON.stringify(aiPlayer.rack)).filter(t => !playedIds.has(t.id));
     pendingBoard = JSON.parse(JSON.stringify(gameState.board));
     renderAll();
     showMessage('AI plays tiles...', 'info');
 
     setTimeout(() => {
-      // Phase 3: Show new board arrangement
+      const oldTileRects = new Map();
+      document.querySelectorAll('#board-groups .tile').forEach(el => {
+        const id = parseInt(el.dataset.id, 10);
+        if (!isNaN(id)) {
+          const r = el.getBoundingClientRect();
+          oldTileRects.set(id, { left: r.left, top: r.top });
+        }
+      });
+
       pendingBoard = JSON.parse(JSON.stringify(newGameState.board));
       renderAll();
       showMessage('AI rearranges board...', 'info');
 
+      document.querySelectorAll('#board-groups .tile').forEach(el => {
+        const id = parseInt(el.dataset.id, 10);
+        if (isNaN(id)) return;
+        const old = oldTileRects.get(id);
+        if (old) {
+          const r = el.getBoundingClientRect();
+          const dx = old.left - r.left;
+          const dy = old.top - r.top;
+          if (dx !== 0 || dy !== 0) {
+            el.style.transition = 'none';
+            el.style.transform = `translate(${dx}px, ${dy}px)`;
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                el.style.transition = 'transform 0.5s ease';
+                el.style.transform = '';
+              });
+            });
+          }
+        } else {
+          el.style.opacity = '0';
+          el.style.transition = 'opacity 0.5s ease';
+          requestAnimationFrame(() => {
+            el.style.opacity = '';
+          });
+        }
+      });
+
       setTimeout(() => {
-        // Phase 4: Commit and transition
         gameState = newGameState;
         pendingRack = null;
         pendingBoard = null;
         isProcessing = false;
+        document.querySelectorAll('#board-groups .tile').forEach(el => {
+          el.style.transition = '';
+          el.style.transform = '';
+          el.style.opacity = '';
+        });
         renderAll();
         afterAITurn();
-      }, 500);
+      }, 600);
     }, 500);
   }, 400);
 }
