@@ -657,7 +657,9 @@ function renderRack() {
   const currentPlayer = gameState.players[gameState.currentPlayerIndex];
 
   let rack;
-  if (pendingRack !== null) {
+  if (currentPlayer?.id === 'AI') {
+    rack = gameState.players[0].rack;
+  } else if (pendingRack !== null) {
     rack = pendingRack;
   } else if (gameState.mode === 'single') {
     rack = gameState.players[0].rack;
