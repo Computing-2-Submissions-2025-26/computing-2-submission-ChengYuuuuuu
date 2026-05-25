@@ -852,6 +852,105 @@ function updateControls() {
   document.getElementById('draw-btn').disabled = isProcessing;
 }
 
+// --- Tutorial ---
+
+const tutorialScript = [
+  { emoji: '😊', text: 'Hi there! Welcome to Rummikub! Have you played this game before?', buttons: 'yesno' },
+];
+
+const tutorialYes = [
+  { emoji: '😊', text: 'Awesome! Let\'s jump right into the game then!' },
+  { emoji: '🥳', text: 'Have fun and good luck!', last: true },
+];
+
+const tutorialNo = [
+  { emoji: '🥳', text: 'Great! Let me teach you the rules!', startGame: true },
+  { emoji: '🤔', text: 'First, the tiles. There are 4 colors: red, blue, yellow, black. Numbers 1 to 13, each twice.' },
+  { emoji: '😊', text: 'Plus 2 joker tiles. They can be any number or color you need.' },
+  { emoji: '🥳', text: 'Your goal: be the first to play ALL tiles from your rack. You start with 14 tiles.' },
+  { emoji: '😊', text: 'Your first play must score at least 30 points. That\'s called the "initial meld".' },
+  { emoji: '🤔', text: 'A valid group has at least 3 tiles. Two types: same number different colors, or same color consecutive numbers.' },
+  { emoji: '🤔', text: 'After your initial meld, you can rearrange tiles on the table. Add, split, move – as long as every group stays valid.' },
+  { emoji: '😊', text: 'If you have the tile a joker represents, you can replace it and take the joker. Then you must use it right away.' },
+  { emoji: '😊', text: 'If you cannot play any tile, you must draw one tile from the pool. Then your turn ends.' },
+  { emoji: '🥳', text: 'The first player to empty their rack wins! That\'s all the rules. Ready to play?', last: true },
+];
+
+let tutorialQueue = [];
+let tutorialStep = 0;
+
+function startTutorial() {
+  const overlay = document.getElementById('tutorial-overlay');
+  overlay.classList.add('active');
+  tutorialQueue = [...tutorialScript];
+  tutorialStep = 0;
+  showTutorialStep();
+}
+
+function showTutorialStep() {
+  if (tutorialStep >= tutorialQueue.length) {
+    endTutorial();
+    return;
+  }
+
+  const step = tutorialQueue[tutorialStep];
+  document.getElementById('tutorial-emoji').textContent = step.emoji;
+  document.getElementById('tutorial-text').textContent = step.text;
+
+  const btnContainer = document.getElementById('tutorial-buttons');
+  btnContainer.innerHTML = '';
+
+  if (step.buttons === 'yesno') {
+    const yesBtn = document.createElement('button');
+    yesBtn.className = 'tut-btn-primary';
+    yesBtn.textContent = 'Yes';
+    yesBtn.addEventListener('click', () => {
+      tutorialQueue = [...tutorialYes];
+      tutorialStep = 0;
+      showTutorialStep();
+    });
+    const noBtn = document.createElement('button');
+    noBtn.className = 'tut-btn-secondary';
+    noBtn.textContent = 'No';
+    noBtn.addEventListener('click', () => {
+      tutorialQueue = [...tutorialNo];
+      tutorialStep = 0;
+      showTutorialStep();
+    });
+    btnContainer.appendChild(yesBtn);
+    btnContainer.appendChild(noBtn);
+  } else {
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'tut-btn-primary';
+    nextBtn.textContent = step.startGame ? "Let's Play! 🎮" : (step.last ? "Let's Play! 🎮" : 'Next ➡');
+    nextBtn.addEventListener('click', () => {
+      if (step.startGame) {
+        startGame('single', 'normal');
+        tutorialStep++;
+        showTutorialStep();
+      } else if (step.last) {
+        endTutorial();
+      } else {
+        tutorialStep++;
+        showTutorialStep();
+      }
+    });
+    btnContainer.appendChild(nextBtn);
+  }
+}
+
+function endTutorial() {
+  const overlay = document.getElementById('tutorial-overlay');
+  overlay.classList.remove('active');
+  tutorialQueue = [];
+  tutorialStep = 0;
+}
+
+document.getElementById('tutorial-skip').addEventListener('click', endTutorial);
+
+// Show tutorial on page load (delayed so DOM is ready)
+setTimeout(startTutorial, 200);
+
 function showMessage(msg, type = 'info') {
   const el = document.getElementById('message-area');
   el.textContent = msg;

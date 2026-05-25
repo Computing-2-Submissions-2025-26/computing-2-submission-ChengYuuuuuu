@@ -549,6 +549,119 @@ body {
   to { opacity: 0; transform: scale(1.1); }
 }
 
+/* Tutorial */
+#tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+#tutorial-overlay.active {
+  display: flex;
+}
+
+#tutorial-dialog {
+  background: #1a2744;
+  border-radius: 20px;
+  padding: 28px 32px;
+  max-width: 520px;
+  width: 90%;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  position: relative;
+}
+
+#tutorial-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #0f1a30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  flex-shrink: 0;
+  animation: avatarBreathe 3s ease-in-out infinite;
+}
+
+@keyframes avatarBreathe {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 rgba(255,255,255,0.1); }
+  50% { transform: scale(1.05); box-shadow: 0 0 16px rgba(255,255,255,0.15); }
+}
+
+#tutorial-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+#tutorial-text {
+  color: #e8e8e8;
+  font-size: 1rem;
+  line-height: 1.6;
+  min-height: 3.2em;
+}
+
+#tutorial-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#tutorial-buttons button {
+  padding: 10px 24px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+
+.tut-btn-primary {
+  background: #f39c12;
+  color: #1a1a2e;
+}
+
+.tut-btn-primary:hover {
+  background: #f1c40f;
+  transform: translateY(-1px);
+}
+
+.tut-btn-secondary {
+  background: rgba(255,255,255,0.1);
+  color: #ccc;
+}
+
+.tut-btn-secondary:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+#tutorial-skip {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+#tutorial-skip:hover {
+  color: #ccc;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
