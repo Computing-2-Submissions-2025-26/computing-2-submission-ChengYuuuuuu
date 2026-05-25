@@ -268,7 +268,7 @@ function handleRackDrop(e) {
 function startGame(mode, difficulty) {
   gameState = initGame(mode, difficulty);
   hideAllScreens();
-  document.getElementById('game-screen').style.display = 'block';
+  document.getElementById('game-screen').style.display = 'flex';
   document.getElementById('gameover-screen').style.display = 'none';
   selectedTileIds = new Set();
   selectedGroupIdx = -1;
@@ -563,7 +563,7 @@ function drawAndSkip() {
 
 function showGameOver(winnerId) {
   hideAllScreens();
-  document.getElementById('gameover-screen').style.display = 'block';
+  document.getElementById('gameover-screen').style.display = 'flex';
   const label = winnerId === 'player1' ? 'Player 1' : (winnerId === 'player2' ? 'Player 2' : 'AI');
   document.getElementById('winner-text').textContent = `${label} wins!`;
 }

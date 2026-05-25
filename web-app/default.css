@@ -4,16 +4,28 @@ body {
   font-family: 'Segoe UI', system-ui, sans-serif;
   background: #1a1a2e;
   color: #eee;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  padding: 20px;
+  align-items: center;
 }
 
 #app {
   width: 100%;
-  max-width: 960px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#game-screen {
+  display: none;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  padding: 8px 12px;
+  gap: 6px;
+  overflow: hidden;
 }
 
 /* Start Screen */
@@ -63,11 +75,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: 8px 12px;
   background: #16213e;
   border-radius: 8px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
+  flex-shrink: 0;
   gap: 8px;
 }
 
@@ -155,17 +166,22 @@ body {
 #board-area {
   background: #16213e;
   border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 16px;
-  min-height: 120px;
+  padding: 12px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  align-items: flex-start;
 }
 
 #board-groups {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
   align-items: flex-start;
+  align-content: flex-start;
   min-height: 60px;
+  width: 100%;
 }
 
 .board-group {
@@ -206,8 +222,8 @@ body {
 #rack-area {
   background: #16213e;
   border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 12px;
+  padding: 10px 12px;
+  flex-shrink: 0;
 }
 
 .tile-row {
@@ -285,10 +301,10 @@ body {
 /* Controls */
 #controls {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 12px;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 #controls button {
@@ -323,10 +339,11 @@ body {
 
 /* Message Area */
 #message-area {
-  padding: 10px 16px;
+  padding: 6px 12px;
   border-radius: 6px;
   min-height: 20px;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  flex-shrink: 0;
 }
 
 #message-area.error {
@@ -347,7 +364,13 @@ body {
 /* Game Over */
 #gameover-screen {
   text-align: center;
-  padding: 80px 20px;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100%;
+  padding: 20px;
 }
 
 #gameover-screen h2 {
