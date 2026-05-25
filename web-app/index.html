@@ -3,14 +3,20 @@
 <meta charset="utf-8">
 <title>Rummikub</title>
 <link rel="stylesheet" href="default.css">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
 <link rel="icon" href="./assets/favicon.png">
 <script type="module" src="main.js"></script>
 <audio id="bgm" src="./assets/30_欢乐斗地主背景音乐.mp3" loop></audio>
 
 <div id="app">
   <div id="start-screen">
-    <h1>Rummikub</h1>
-    <p class="subtitle">Two-Player Tile Game</p>
+    <div class="title-block">
+      <h1 class="main-title">
+        <span class="title-rummikub">Rumm<span class="star-i">i<span class="star">★</span></span>kub</span>
+        <span class="title-duo">Duo</span>
+      </h1>
+      <p class="subtitle">Two-Player Tile Game</p>
+    </div>
     <div class="mode-buttons">
       <button data-mode="single" data-difficulty="normal">Single Player (Normal)</button>
       <button data-mode="single" data-difficulty="hard">Single Player (Hard)</button>

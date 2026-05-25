@@ -32,20 +32,69 @@ body {
 /* Start Screen */
 #start-screen {
   text-align: center;
-  padding: 80px 20px;
+  padding: 25vh 20px 0;
 }
 
-#start-screen h1 {
-  font-size: 3.5rem;
-  color: #f39c12;
+.title-block {
+  margin-bottom: 48px;
+}
+
+.main-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.title-rummikub {
+  font-family: 'Montserrat', Impact, sans-serif;
+  font-weight: 800;
+  font-size: 6rem;
+  background: linear-gradient(135deg, #FFD700, #F39C12);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   letter-spacing: 4px;
-  margin-bottom: 8px;
+  position: relative;
+  line-height: 1.1;
+}
+
+.star-i {
+  position: relative;
+  display: inline-block;
+}
+
+.star {
+  position: absolute;
+  top: -0.2em;
+  left: calc(50% - 10px);
+  transform: translateX(-50%) rotate(0deg);
+  font-size: 0.54em;
+  color: #FFD700;
+  -webkit-text-fill-color: #FFD700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+  animation: starSpin 4s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes starSpin {
+  from { transform: translateX(-50%) rotate(0deg); }
+  to { transform: translateX(-50%) rotate(360deg); }
+}
+
+.title-duo {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: 2.8rem;
+  color: #89CFF0;
+  margin-top: -8px;
 }
 
 .subtitle {
   font-size: 1.1rem;
   color: #888;
-  margin-bottom: 48px;
+  margin-top: 12px;
+  text-align: center;
 }
 
 .mode-buttons {
