@@ -5,6 +5,7 @@
 <link rel="stylesheet" href="default.css">
 <link rel="icon" href="./assets/favicon.png">
 <script type="module" src="main.js"></script>
+<audio id="bgm" src="./assets/30_欢乐斗地主背景音乐.mp3" loop></audio>
 
 <div id="app">
   <div id="start-screen">
@@ -15,6 +16,7 @@
       <button data-mode="single" data-difficulty="hard">Single Player (Hard)</button>
       <button data-mode="twoPlayer">Two Players</button>
     </div>
+    <button id="start-music-btn">🔇 Music</button>
   </div>
 
   <div id="game-screen" style="display:none">
@@ -35,6 +37,7 @@
         <span id="meld-status"></span>
       </div>
       <button id="new-game-btn">New Game</button>
+      <button id="music-btn">🔇 Music</button>
     </div>
 
     <div id="board-area">

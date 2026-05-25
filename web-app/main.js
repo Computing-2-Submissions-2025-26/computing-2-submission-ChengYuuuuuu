@@ -39,6 +39,28 @@ function setupEventListeners() {
   document.getElementById('new-game-btn').addEventListener('click', showStartScreen);
   document.getElementById('play-again-btn').addEventListener('click', showStartScreen);
 
+  const bgm = document.getElementById('bgm');
+  const musicBtns = [document.getElementById('music-btn'), document.getElementById('start-music-btn')];
+  let musicOn = false;
+
+  function toggleMusic() {
+    musicOn = !musicOn;
+    const label = musicOn ? '🔊 Music' : '🔇 Music';
+    musicBtns.forEach(b => { if (b) b.textContent = label; });
+    if (musicOn) bgm.play();
+    else bgm.pause();
+  }
+
+  function startMusic() {
+    if (!musicOn) toggleMusic();
+  }
+
+  musicBtns.forEach(b => {
+    if (b) b.addEventListener('click', toggleMusic);
+  });
+
+  document.querySelector('.mode-buttons').addEventListener('click', startMusic, { once: true });
+
   document.getElementById('submit-btn').addEventListener('click', submitTurn);
   document.getElementById('cancel-btn').addEventListener('click', cancelTurn);
   document.getElementById('draw-btn').addEventListener('click', drawAndSkip);
@@ -218,6 +240,10 @@ function performNewGroupDrop(tileIds, sourceType, sourceGroupIdx, tiles) {
     pendingBoard = pendingBoard.map((g, i) =>
       i === sourceGroupIdx ? g.filter(t => !idSet.has(t.id)) : g
     );
+  }
+
+  if (aiFadeTileIds) {
+    tileIds.forEach(id => aiFadeTileIds.delete(id));
   }
 
   pendingBoard.push([...tiles]);
