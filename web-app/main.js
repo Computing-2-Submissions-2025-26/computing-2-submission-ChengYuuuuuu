@@ -509,17 +509,11 @@ function submitTurn() {
   }
 
   const player = gameState.players[gameState.currentPlayerIndex];
-  let manipulatedGroups;
-  if (!player.hasMelded) {
-    const playedIdsSet = new Set(tilesToPlay.map(t => t.id));
-    manipulatedGroups = pendingBoard.filter(group =>
-      group.some(t => playedIdsSet.has(t.id))
-    );
-  } else {
-    manipulatedGroups = pendingBoard;
-  }
+  const manipulatedGroups = pendingBoard;
 
   consecutiveEmptySkips = 0;
+  const wasMelded = player.hasMelded;
+  const playerIdx = gameState.currentPlayerIndex;
 
   const result = makeMove(gameState, tilesToPlay, manipulatedGroups, jokerReplacements);
 
@@ -529,6 +523,9 @@ function submitTurn() {
   }
 
   gameState = result.newState;
+  if (!wasMelded && gameState.players[playerIdx].hasMelded) {
+    showThawAnimation();
+  }
   pendingRack = null;
   pendingBoard = null;
   originalRackIds = null;
@@ -644,6 +641,14 @@ function showGameOver(winnerId) {
   document.getElementById('gameover-screen').style.display = 'flex';
   const label = winnerId === 'player1' ? 'Player 1' : (winnerId === 'player2' ? 'Player 2' : 'AI');
   document.getElementById('winner-text').textContent = `${label} wins!`;
+}
+
+function showThawAnimation() {
+  const overlay = document.createElement('div');
+  overlay.className = 'thaw-overlay';
+  overlay.innerHTML = '<div class="thaw-text">Thawed!</div>';
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.remove(), 1200);
 }
 
 function updateFrozenState() {

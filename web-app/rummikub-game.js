@@ -281,60 +281,40 @@ export function makeMove(gameState, tilesToPlay, manipulatedGroups, jokerReplace
   const scoreDelta = tilesToPlay.reduce((s, t) => s + tileValue(t), 0);
 
   if (!player.hasMelded) {
-    // --- INITIAL MELD: manipulatedGroups contains ONLY new groups (not old board) ---
     if (jokerReplacements.length > 0) {
       return { success: false, newState: state, errorMsg: 'Cannot replace jokers before initial meld', scoreDelta: 0 };
     }
-    // New groups must NOT contain any old board tiles
-    for (const tile of newGroupTiles) {
-      if (oldBoardTiles.some(ot => tileEqual(ot, tile))) {
-        return { success: false, newState: state, errorMsg: 'Cannot use existing board tiles during initial meld', scoreDelta: 0 };
-      }
-    }
-    if (!allGroupsValid(manipulatedGroups)) {
-      return { success: false, newState: state, errorMsg: 'Invalid group(s) formed', scoreDelta: 0 };
-    }
-    // Every tile in new groups must come from tilesToPlay (no extra tiles)
-    const newTileIds = new Set(newGroupTiles.map(t => t.id));
-    for (const id of handIds) {
-      if (!newTileIds.has(id)) {
-        return { success: false, newState: state, errorMsg: 'Board tile mismatch', scoreDelta: 0 };
-      }
-    }
-    if (newTileIds.size !== handIds.size) {
-      return { success: false, newState: state, errorMsg: 'Board tile mismatch', scoreDelta: 0 };
-    }
+  }
+
+  if (!allGroupsValid(manipulatedGroups)) {
+    return { success: false, newState: state, errorMsg: 'Invalid group(s) formed', scoreDelta: 0 };
+  }
+
+  const oldIds = new Set(oldBoardTiles.map(t => t.id));
+  const newIds = new Set(newGroupTiles.map(t => t.id));
+  const replacedJokerIds = new Set(replacedJokers.map(t => t.id));
+
+  const expectedIds = new Set();
+  for (const id of oldIds) {
+    if (!replacedJokerIds.has(id)) expectedIds.add(id);
+  }
+  for (const id of handIds) {
+    expectedIds.add(id);
+  }
+
+  if (expectedIds.size !== newIds.size || ![...expectedIds].every(id => newIds.has(id))) {
+    return { success: false, newState: state, errorMsg: 'Board tile mismatch', scoreDelta: 0 };
+  }
+
+  if (!player.hasMelded) {
     const actualScore = manipulatedGroups.reduce((s, g) => s + groupScore(g), 0);
     if (actualScore < INITIAL_MELD_SCORE) {
       return { success: false, newState: state, errorMsg: `Initial meld needs at least ${INITIAL_MELD_SCORE} points (got ${actualScore})`, scoreDelta: 0 };
     }
     player.hasMelded = true;
-    // Final board = old board (unchanged) + new groups (sorted)
-    state.board = [...state.board, ...manipulatedGroups.map(g => sortGroup(g))];
-  } else {
-    // --- POST-MELD: full board manipulation allowed, manipulatedGroups is the final board ---
-    if (!allGroupsValid(manipulatedGroups)) {
-      return { success: false, newState: state, errorMsg: 'Invalid group(s) formed', scoreDelta: 0 };
-    }
-    // Conservation: oldBoard - replacedJokers + allFromHand == newBoard
-    const oldIds = new Set(oldBoardTiles.map(t => t.id));
-    const newIds = new Set(newGroupTiles.map(t => t.id));
-    const replacedJokerIds = new Set(replacedJokers.map(t => t.id));
-
-    const expectedIds = new Set();
-    for (const id of oldIds) {
-      if (!replacedJokerIds.has(id)) expectedIds.add(id);
-    }
-    for (const id of handIds) {
-      expectedIds.add(id);
-    }
-
-    if (expectedIds.size !== newIds.size || ![...expectedIds].every(id => newIds.has(id))) {
-      return { success: false, newState: state, errorMsg: 'Board tile mismatch', scoreDelta: 0 };
-    }
-
-    state.board = manipulatedGroups.map(g => sortGroup(g));
   }
+
+  state.board = manipulatedGroups.map(g => sortGroup(g));
 
   player.rack = removeTiles(player.rack, allFromHand);
   for (const joker of replacedJokers) {
