@@ -11,6 +11,7 @@ let selectedGroupIdx = -1;
 let isProcessing = false;
 let dragData = null;
 let consecutiveEmptySkips = 0;
+let aiFadeTileIds = null;
 
 setupEventListeners();
 showStartScreen();
@@ -345,9 +346,13 @@ function animateAIMove(tilesToPlay, newGameState) {
         }
       });
 
+      aiFadeTileIds = new Set(tilesToPlay.map(t => t.id));
       pendingBoard = JSON.parse(JSON.stringify(newGameState.board));
       renderAll();
       showMessage('AI rearranges board...', 'info');
+
+      const slideEls = [];
+      const fadeEls = [];
 
       document.querySelectorAll('#board-groups .tile').forEach(el => {
         const id = parseInt(el.dataset.id, 10);
@@ -360,35 +365,44 @@ function animateAIMove(tilesToPlay, newGameState) {
           if (dx !== 0 || dy !== 0) {
             el.style.transition = 'none';
             el.style.transform = `translate(${dx}px, ${dy}px)`;
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                el.style.transition = 'transform 0.5s ease';
-                el.style.transform = '';
-              });
-            });
+            slideEls.push(el);
           }
         } else {
           el.style.opacity = '0';
-          el.style.transition = 'opacity 0.5s ease';
-          requestAnimationFrame(() => {
-            el.style.opacity = '';
-          });
+          fadeEls.push(el);
         }
       });
 
-      setTimeout(() => {
-        gameState = newGameState;
-        pendingRack = null;
-        pendingBoard = null;
-        isProcessing = false;
-        document.querySelectorAll('#board-groups .tile').forEach(el => {
-          el.style.transition = '';
-          el.style.transform = '';
-          el.style.opacity = '';
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          slideEls.forEach(el => {
+            el.style.transition = 'transform 0.5s ease';
+            el.style.transform = '';
+          });
+
+          setTimeout(() => {
+            fadeEls.forEach(el => {
+              el.style.transition = 'opacity 0.5s ease';
+              el.style.opacity = '';
+            });
+
+            setTimeout(() => {
+              aiFadeTileIds = null;
+              gameState = newGameState;
+              pendingRack = null;
+              pendingBoard = null;
+              isProcessing = false;
+              document.querySelectorAll('#board-groups .tile').forEach(el => {
+                el.style.transition = '';
+                el.style.transform = '';
+                el.style.opacity = '';
+              });
+              renderAll();
+              afterAITurn();
+            }, 500);
+          }, 500);
         });
-        renderAll();
-        afterAITurn();
-      }, 600);
+      });
     }, 500);
   }, 400);
 }
@@ -741,6 +755,10 @@ function createTileElement(tile, opts = {}) {
 
   if (tile.id !== undefined) {
     div.dataset.id = String(tile.id);
+  }
+
+  if (aiFadeTileIds && tile.id !== undefined && aiFadeTileIds.has(tile.id)) {
+    div.style.opacity = '0';
   }
 
   const isAiTurn = gameState && gameState.players[gameState.currentPlayerIndex]?.id === 'AI';
