@@ -332,6 +332,7 @@ function startTurn() {
   selectedTileIds = new Set();
   selectedGroupIdx = -1;
 
+  updateFrozenState();
   updateControls();
   renderAll();
   showMessage(`Your turn, ${current.id}!${current.hasMelded ? '' : ' (Need 30+ points for initial meld)'}`, 'info');
@@ -645,7 +646,35 @@ function showGameOver(winnerId) {
   document.getElementById('winner-text').textContent = `${label} wins!`;
 }
 
+function updateFrozenState() {
+  const area = document.getElementById('board-area');
+  const human = gameState.players[0];
+  const frozen = human && !human.hasMelded;
+
+  area.classList.toggle('frozen', frozen);
+
+  let container = area.querySelector('.frozen-snowflakes');
+  if (frozen && !container) {
+    container = document.createElement('div');
+    container.className = 'frozen-snowflakes';
+    container.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden;border-radius:8px';
+    const count = 20;
+    for (let i = 0; i < count; i++) {
+      const flake = document.createElement('span');
+      flake.className = 'frozen-snowflake';
+      const size = 8 + Math.random() * 16;
+      flake.textContent = '❄';
+      flake.style.cssText = `font-size:${size}px;left:${Math.random()*100}%;top:${Math.random()*100}%;opacity:0.2`;
+      container.appendChild(flake);
+    }
+    area.appendChild(container);
+  }
+
+  if (!frozen && container) container.remove();
+}
+
 function renderAll() {
+  try { updateFrozenState(); } catch (e) { console.error('updateFrozenState error:', e); }
   try { renderGameInfo(); } catch (e) { console.error('renderGameInfo error:', e); }
   try { renderBoard(); } catch (e) { console.error('renderBoard error:', e); }
   try { renderRack(); } catch (e) { console.error('renderRack error:', e); }

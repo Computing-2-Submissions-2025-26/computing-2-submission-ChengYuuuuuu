@@ -26,6 +26,7 @@ body {
   padding: 8px 12px;
   gap: 6px;
   overflow: hidden;
+  position: relative;
 }
 
 /* Start Screen */
@@ -200,6 +201,25 @@ body {
   overflow-y: auto;
   display: flex;
   align-items: flex-start;
+  position: relative;
+}
+
+#board-area.frozen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  background: radial-gradient(ellipse at center, transparent 30%, rgba(173,216,230,0.4) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.frozen-snowflake {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.2;
+  user-select: none;
 }
 
 #board-groups {
@@ -364,11 +384,16 @@ body {
 
 /* Message Area */
 #message-area {
-  padding: 6px 12px;
+  position: absolute;
+  top: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 20px;
   border-radius: 6px;
   min-height: 20px;
   font-size: 0.9rem;
-  flex-shrink: 0;
+  z-index: 10;
+  white-space: nowrap;
 }
 
 #message-area.error {
