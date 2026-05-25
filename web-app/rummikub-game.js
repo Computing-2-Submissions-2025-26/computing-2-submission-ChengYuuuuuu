@@ -37,6 +37,16 @@ function tileValue(t) {
   return t.isJoker ? 30 : t.value;
 }
 
+function groupScore(group) {
+  return group.reduce((s, t) => {
+    if (t.isJoker) {
+      const repr = getJokerRepresentation(group);
+      return s + (repr ? repr.value : 0);
+    }
+    return s + t.value;
+  }, 0);
+}
+
 function tileEqual(a, b) {
   return a.id === b.id;
 }
@@ -294,8 +304,9 @@ export function makeMove(gameState, tilesToPlay, manipulatedGroups, jokerReplace
     if (newTileIds.size !== handIds.size) {
       return { success: false, newState: state, errorMsg: 'Board tile mismatch', scoreDelta: 0 };
     }
-    if (scoreDelta < INITIAL_MELD_SCORE) {
-      return { success: false, newState: state, errorMsg: `Initial meld needs at least ${INITIAL_MELD_SCORE} points (got ${scoreDelta})`, scoreDelta: 0 };
+    const actualScore = manipulatedGroups.reduce((s, g) => s + groupScore(g), 0);
+    if (actualScore < INITIAL_MELD_SCORE) {
+      return { success: false, newState: state, errorMsg: `Initial meld needs at least ${INITIAL_MELD_SCORE} points (got ${actualScore})`, scoreDelta: 0 };
     }
     player.hasMelded = true;
     // Final board = old board (unchanged) + new groups (sorted)
@@ -443,8 +454,8 @@ function findExtensions(rack, board) {
  */
 function findCombinedMeld(groups) {
   const sorted = [...groups].sort((a, b) => {
-    const sa = a.reduce((s, t) => s + tileValue(t), 0);
-    const sb = b.reduce((s, t) => s + tileValue(t), 0);
+    const sa = groupScore(a);
+    const sb = groupScore(b);
     return sb - sa;
   });
 
@@ -465,12 +476,12 @@ function findCombinedMeld(groups) {
     backtrack(idx + 1, usedIds, curTiles, curGroups, curScore);
 
     const group = sorted[idx];
-    const groupScore = group.reduce((s, t) => s + tileValue(t), 0);
+    const gScore = groupScore(group);
     const hasOverlap = group.some(t => usedIds.has(t.id));
     if (!hasOverlap) {
       const newIds = new Set(usedIds);
       group.forEach(t => newIds.add(t.id));
-      backtrack(idx + 1, newIds, [...curTiles, ...group], [...curGroups, group], curScore + groupScore);
+      backtrack(idx + 1, newIds, [...curTiles, ...group], [...curGroups, group], curScore + gScore);
     }
   }
 
@@ -497,7 +508,7 @@ export function getValidMoves(gameState) {
 
   if (!player.hasMelded) {
     for (const group of newGroups) {
-      const score = group.reduce((s, t) => s + tileValue(t), 0);
+      const score = groupScore(group);
       if (score >= INITIAL_MELD_SCORE) {
         moves.push({ tilesToPlay: group, manipulatedGroups: [group], score });
       }
@@ -514,7 +525,7 @@ export function getValidMoves(gameState) {
     }
   } else {
     for (const group of newGroups) {
-      const score = group.reduce((s, t) => s + tileValue(t), 0);
+      const score = groupScore(group);
       moves.push({ tilesToPlay: group, manipulatedGroups: [...board, group], score });
     }
 
