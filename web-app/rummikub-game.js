@@ -119,6 +119,24 @@ function allGroupsValid(groups) {
   return groups.every(g => isValidGroup(g));
 }
 
+const COLOR_ORDER = ['red', 'blue', 'yellow', 'black'];
+export function sortGroup(group) {
+  if (group.length <= 1) return group;
+  const nonJokers = group.filter(t => !t.isJoker);
+  if (nonJokers.length === 0) return group;
+  const allSameValue = nonJokers.every(t => t.value === nonJokers[0].value);
+  if (allSameValue) {
+    return [...group].sort((a, b) => {
+      if (a.isJoker) return 1; if (b.isJoker) return -1;
+      return COLOR_ORDER.indexOf(a.color) - COLOR_ORDER.indexOf(b.color);
+    });
+  }
+  return [...group].sort((a, b) => {
+    if (a.isJoker) return 1; if (b.isJoker) return -1;
+    return a.value - b.value;
+  });
+}
+
 /**
  * Initialize a new game.
  * @param {string} mode - 'single' or 'twoPlayer'
@@ -280,8 +298,8 @@ export function makeMove(gameState, tilesToPlay, manipulatedGroups, jokerReplace
       return { success: false, newState: state, errorMsg: `Initial meld needs at least ${INITIAL_MELD_SCORE} points (got ${scoreDelta})`, scoreDelta: 0 };
     }
     player.hasMelded = true;
-    // Final board = old board (unchanged) + new groups
-    state.board = [...state.board, ...manipulatedGroups];
+    // Final board = old board (unchanged) + new groups (sorted)
+    state.board = [...state.board, ...manipulatedGroups.map(g => sortGroup(g))];
   } else {
     // --- POST-MELD: full board manipulation allowed, manipulatedGroups is the final board ---
     if (!allGroupsValid(manipulatedGroups)) {
@@ -304,7 +322,7 @@ export function makeMove(gameState, tilesToPlay, manipulatedGroups, jokerReplace
       return { success: false, newState: state, errorMsg: 'Board tile mismatch', scoreDelta: 0 };
     }
 
-    state.board = manipulatedGroups;
+    state.board = manipulatedGroups.map(g => sortGroup(g));
   }
 
   player.rack = removeTiles(player.rack, allFromHand);

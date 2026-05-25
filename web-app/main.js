@@ -1,4 +1,4 @@
-import { initGame, makeMove, skipAndDraw, checkWin, isValidGroup, getAIMove, getJokerRepresentation } from './rummikub-game.js';
+import { initGame, makeMove, skipAndDraw, checkWin, isValidGroup, getAIMove, getJokerRepresentation, sortGroup } from './rummikub-game.js';
 
 const COLOR_LABELS = { red: 'R', blue: 'B', yellow: 'Y', black: 'K' };
 
@@ -89,24 +89,6 @@ function findPendingTile(tileId) {
   return (pendingRack || []).find(t => t.id === tileId);
 }
 
-function sortGroup(group) {
-  if (group.length <= 1) return group;
-  const nonJokers = group.filter(t => !t.isJoker);
-  if (nonJokers.length === 0) return group;
-  const allSameValue = nonJokers.every(t => t.value === nonJokers[0].value);
-  if (allSameValue) {
-    const colorOrder = ['red', 'blue', 'yellow', 'black'];
-    return [...group].sort((a, b) => {
-      if (a.isJoker) return 1; if (b.isJoker) return -1;
-      return colorOrder.indexOf(a.color) - colorOrder.indexOf(b.color);
-    });
-  }
-  return [...group].sort((a, b) => {
-    if (a.isJoker) return 1; if (b.isJoker) return -1;
-    return a.value - b.value;
-  });
-}
-
 function getInsertIndex(groupEl, clientX) {
   const tileEls = groupEl.querySelectorAll('.tile');
   let pos = 0;
@@ -138,13 +120,28 @@ function handleDragStart(e) {
   const isFromBoard = !!boardGroupEl;
   const sourceGroupIdx = isFromBoard ? parseInt(boardGroupEl.dataset.index, 10) : -1;
 
-  const tile = findPendingTile(tileId);
-  if (!tile) return;
+  if (isFromBoard) {
+    selectedTileIds.clear();
+    selectedGroupIdx = -1;
+    const tile = findPendingTile(tileId);
+    if (!tile) return;
+    dragData = { tileIds: [tileId], tiles: [tile], sourceType: 'board', sourceGroupIdx };
+    e.dataTransfer.setData('text/plain', String(tileId));
+  } else {
+    let ids;
+    if (selectedTileIds.has(tileId) && selectedTileIds.size > 1) {
+      ids = [...selectedTileIds];
+    } else {
+      selectedTileIds.clear();
+      ids = [tileId];
+    }
+    const tiles = ids.map(id => (pendingRack || []).find(t => t.id === id)).filter(Boolean);
+    if (tiles.length === 0) return;
+    selectedGroupIdx = -1;
+    dragData = { tileIds: ids, tiles, sourceType: 'rack', sourceGroupIdx: -1 };
+    e.dataTransfer.setData('text/plain', JSON.stringify(ids));
+  }
 
-  selectedTileIds.clear();
-  selectedGroupIdx = -1;
-  dragData = { tileId, sourceType: isFromBoard ? 'board' : 'rack', sourceGroupIdx, tile };
-  e.dataTransfer.setData('text/plain', String(tileId));
   e.dataTransfer.effectAllowed = 'move';
   tileEl.classList.add('dragging');
   document.getElementById('board-groups').classList.add('drag-active');
@@ -184,50 +181,55 @@ function handleDragOver(e) {
 function handleBoardDrop(e) {
   e.preventDefault();
   if (!dragData) return;
-  const { tileId, sourceType, sourceGroupIdx, tile } = dragData;
+  const { tileIds, tiles, sourceType, sourceGroupIdx } = dragData;
 
   const groupEl = e.target.closest('.board-group');
   if (groupEl) {
     const targetIdx = parseInt(groupEl.dataset.index, 10);
     if (isNaN(targetIdx)) return;
     const insertAt = getInsertIndex(groupEl, e.clientX);
-    performGroupDrop(tileId, sourceType, sourceGroupIdx, tile, targetIdx, insertAt);
+    performGroupDrop(tileIds, sourceType, sourceGroupIdx, tiles, targetIdx, insertAt);
   } else if (e.currentTarget === document.getElementById('board-groups')) {
-    performNewGroupDrop(tileId, sourceType, sourceGroupIdx, tile);
+    performNewGroupDrop(tileIds, sourceType, sourceGroupIdx, tiles);
   }
 }
 
-function performGroupDrop(tileId, sourceType, sourceGroupIdx, tile, targetIdx, insertAt) {
+function performGroupDrop(tileIds, sourceType, sourceGroupIdx, tiles, targetIdx, insertAt) {
+  const idSet = new Set(tileIds);
   if (sourceType === 'board' && sourceGroupIdx === targetIdx) {
     const group = pendingBoard[sourceGroupIdx];
-    const filtered = group.filter(t => t.id !== tileId);
-    pendingBoard[sourceGroupIdx] = sortGroup([...filtered.slice(0, insertAt), tile, ...filtered.slice(insertAt)]);
+    const filtered = group.filter(t => !idSet.has(t.id));
+    pendingBoard[sourceGroupIdx] = sortGroup([...filtered.slice(0, insertAt), ...tiles, ...filtered.slice(insertAt)]);
     afterTileMove();
     return;
   }
 
-  commitTileMove(tileId, sourceType, sourceGroupIdx, targetIdx, sortGroup(
-    [...pendingBoard[targetIdx].slice(0, insertAt), tile, ...pendingBoard[targetIdx].slice(insertAt)]
+  commitTileMove(tileIds, sourceType, sourceGroupIdx, targetIdx, sortGroup(
+    [...pendingBoard[targetIdx].slice(0, insertAt), ...tiles, ...pendingBoard[targetIdx].slice(insertAt)]
   ));
 }
 
-function performNewGroupDrop(tileId, sourceType, sourceGroupIdx, tile) {
+function performNewGroupDrop(tileIds, sourceType, sourceGroupIdx, tiles) {
+  const idSet = new Set(tileIds);
   if (sourceType === 'rack') {
-    pendingRack = pendingRack.filter(t => t.id !== tileId);
+    pendingRack = pendingRack.filter(t => !idSet.has(t.id));
   } else if (sourceType === 'board' && sourceGroupIdx >= 0) {
-    pendingBoard[sourceGroupIdx] = pendingBoard[sourceGroupIdx].filter(t => t.id !== tileId);
+    pendingBoard = pendingBoard.map((g, i) =>
+      i === sourceGroupIdx ? g.filter(t => !idSet.has(t.id)) : g
+    );
   }
 
-  pendingBoard.push([tile]);
+  pendingBoard.push([...tiles]);
   afterTileMove();
 }
 
-function commitTileMove(tileId, sourceType, sourceGroupIdx, targetIdx, newTargetGroup) {
+function commitTileMove(tileIds, sourceType, sourceGroupIdx, targetIdx, newTargetGroup) {
+  const idSet = new Set(tileIds);
   if (sourceType === 'rack') {
-    pendingRack = pendingRack.filter(t => t.id !== tileId);
+    pendingRack = pendingRack.filter(t => !idSet.has(t.id));
   } else if (sourceType === 'board' && sourceGroupIdx >= 0) {
     pendingBoard = pendingBoard.map((g, i) =>
-      i === sourceGroupIdx ? g.filter(t => t.id !== tileId) : g
+      i === sourceGroupIdx ? g.filter(t => !idSet.has(t.id)) : g
     );
   }
 
@@ -251,11 +253,12 @@ function afterTileMove(skipMsg = false) {
 function handleRackDrop(e) {
   e.preventDefault();
   if (!dragData) return;
-  const { tileId, sourceType, sourceGroupIdx, tile } = dragData;
+  const { tileIds, tiles, sourceType, sourceGroupIdx } = dragData;
   if (sourceType !== 'board' || sourceGroupIdx < 0) return;
 
-  pendingRack.push(tile);
-  pendingBoard[sourceGroupIdx] = pendingBoard[sourceGroupIdx].filter(t => t.id !== tileId);
+  const idSet = new Set(tileIds);
+  for (const t of tiles) pendingRack.push(t);
+  pendingBoard[sourceGroupIdx] = pendingBoard[sourceGroupIdx].filter(t => !idSet.has(t.id));
   selectedTileIds.clear();
   selectedGroupIdx = -1;
   afterTileMove(true);
@@ -307,31 +310,7 @@ function startTurn() {
   showMessage(`Your turn, ${current.id}!${current.hasMelded ? '' : ' (Need 30+ points for initial meld)'}`, 'info');
 }
 
-function doAITurn() {
-  try {
-    const aiMove = getAIMove(gameState);
-
-    if (aiMove.action === 'draw') {
-      const result = skipAndDraw(gameState);
-      gameState = result.newState;
-    } else {
-      const result = makeMove(gameState, aiMove.tilesToPlay, aiMove.manipulatedGroups);
-      if (result.success) {
-        gameState = result.newState;
-      } else {
-        console.error('AI move rejected:', result.errorMsg);
-        const drawResult = skipAndDraw(gameState);
-        gameState = drawResult.newState;
-      }
-    }
-  } catch (e) {
-    console.error('AI error:', e);
-    showMessage('AI encountered an error and will skip', 'error');
-    try { const r = skipAndDraw(gameState); gameState = r.newState; } catch (_) {}
-  }
-
-  isProcessing = false;
-
+function afterAITurn() {
   try {
     const winner = checkWin(gameState);
     if (winner) {
@@ -341,11 +320,70 @@ function doAITurn() {
   } catch (_) {
     console.error('checkWin error');
   }
+  try { startTurn(); } catch (_) { setTimeout(startTurn, 100); }
+}
 
+function animateAIMove(tilesToPlay, newGameState) {
+  const aiPlayer = gameState.players[gameState.currentPlayerIndex];
+  const playedIds = new Set(tilesToPlay.map(t => t.id));
+
+  // Phase 1: Show current state
+  showMessage('AI is thinking...', 'info');
+
+  setTimeout(() => {
+    // Phase 2: Show tiles leaving AI's rack
+    pendingRack = JSON.parse(JSON.stringify(aiPlayer.rack)).filter(t => !playedIds.has(t.id));
+    pendingBoard = JSON.parse(JSON.stringify(gameState.board));
+    renderAll();
+    showMessage('AI plays tiles...', 'info');
+
+    setTimeout(() => {
+      // Phase 3: Show new board arrangement
+      pendingBoard = JSON.parse(JSON.stringify(newGameState.board));
+      renderAll();
+      showMessage('AI rearranges board...', 'info');
+
+      setTimeout(() => {
+        // Phase 4: Commit and transition
+        gameState = newGameState;
+        pendingRack = null;
+        pendingBoard = null;
+        isProcessing = false;
+        renderAll();
+        afterAITurn();
+      }, 500);
+    }, 500);
+  }, 400);
+}
+
+function doAITurn() {
   try {
-    startTurn();
-  } catch (_) {
-    setTimeout(startTurn, 100);
+    const aiMove = getAIMove(gameState);
+
+    if (aiMove.action === 'draw') {
+      const result = skipAndDraw(gameState);
+      gameState = result.newState;
+      isProcessing = false;
+      afterAITurn();
+      return;
+    }
+
+    const moveResult = makeMove(gameState, aiMove.tilesToPlay, aiMove.manipulatedGroups);
+    if (moveResult.success) {
+      animateAIMove(aiMove.tilesToPlay, moveResult.newState);
+    } else {
+      console.error('AI move rejected:', moveResult.errorMsg);
+      const drawResult = skipAndDraw(gameState);
+      gameState = drawResult.newState;
+      isProcessing = false;
+      afterAITurn();
+    }
+  } catch (e) {
+    console.error('AI error:', e);
+    showMessage('AI encountered an error and will skip', 'error');
+    try { const r = skipAndDraw(gameState); gameState = r.newState; } catch (_) {}
+    isProcessing = false;
+    afterAITurn();
   }
 }
 
@@ -584,7 +622,7 @@ function renderGameInfo() {
 function renderBoard() {
   const container = document.getElementById('board-groups');
   const isAiTurn = isProcessing && gameState.players[gameState.currentPlayerIndex]?.id === 'AI';
-  const displayGroups = pendingBoard && !isAiTurn ? pendingBoard : gameState.board;
+  const displayGroups = pendingBoard !== null ? pendingBoard : gameState.board;
   container.innerHTML = '';
 
   if (!displayGroups || displayGroups.length === 0) {
@@ -596,6 +634,8 @@ function renderBoard() {
     const groupEl = document.createElement('div');
     groupEl.className = 'board-group';
     if (idx === selectedGroupIdx && !isAiTurn) groupEl.classList.add('selected');
+    const isValid = group.length < 3 ? false : isValidGroup(group);
+    if (!isValid && pendingBoard && !isAiTurn) groupEl.classList.add('invalid');
     groupEl.dataset.index = idx;
 
     const canSelect = !isAiTurn;
@@ -617,7 +657,7 @@ function renderRack() {
   const currentPlayer = gameState.players[gameState.currentPlayerIndex];
 
   let rack;
-  if (pendingRack && !isProcessing) {
+  if (pendingRack !== null) {
     rack = pendingRack;
   } else if (gameState.mode === 'single') {
     rack = gameState.players[0].rack;

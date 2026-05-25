@@ -188,6 +188,12 @@ body {
   background: rgba(52,152,219,0.1);
 }
 
+.board-group.invalid {
+  border-color: #e74c3c !important;
+  background: rgba(231,76,60,0.12) !important;
+  box-shadow: 0 0 12px rgba(231,76,60,0.3);
+}
+
 .board-empty {
   color: #555;
   font-style: italic;
