@@ -1068,7 +1068,7 @@ const tutorialYes = [
 ];
 
 const tutorialNo = [
-  { emoji: '🥳', text: 'Great! Let me teach you the rules!', startGame: true },
+  { emoji: '🥳', text: 'Great! Let me teach you the rules!' },
   { emoji: '🤔', text: 'First, the tiles. There are 4 colors: red, blue, yellow, black. Numbers 1 to 13, each twice.' },
   { emoji: '😊', text: 'Plus 2 joker tiles. They can be any number or color you need.' },
   { emoji: '🥳', text: 'Your goal: be the first to play ALL tiles from your rack. You start with 14 tiles.' },
@@ -1117,6 +1117,10 @@ function showTutorialStep() {
     noBtn.className = 'tut-btn-secondary';
     noBtn.textContent = 'No';
     noBtn.addEventListener('click', () => {
+      endTutorial();
+      startTutorialGame();
+      const overlay = document.getElementById('tutorial-overlay');
+      overlay.classList.add('active');
       tutorialQueue = [...tutorialNo];
       tutorialStep = 0;
       showTutorialStep();
