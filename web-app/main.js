@@ -12,6 +12,8 @@ let isProcessing = false;
 let dragData = null;
 let consecutiveEmptySkips = 0;
 let aiFadeTileIds = null;
+let isTutorialMode = false;
+let tutorialGameStep = 1;
 
 const bgm = document.getElementById('bgm');
 bgm.volume = 0.5;
@@ -282,6 +284,17 @@ function afterTileMove(skipMsg = false) {
     showMessage(msg, 'success');
   }
   dragData = null;
+
+  if (isTutorialMode && tutorialGameStep === 1) {
+    const hasGroup = pendingBoard.some(g => {
+      const ids = g.map(t => t.id);
+      return ids.includes(1) && ids.includes(2) && ids.includes(3);
+    });
+    if (hasGroup) {
+      tutorialGameStep = 2;
+      showMessage('Step 1 done! Click Submit to confirm.', 'success');
+    }
+  }
 }
 
 function handleRackDrop(e) {
@@ -297,6 +310,77 @@ function handleRackDrop(e) {
   selectedGroupIdx = -1;
   afterTileMove(true);
   showMessage('Tile returned to rack', 'info');
+}
+
+function startTutorialGame() {
+  isTutorialMode = true;
+  tutorialGameStep = 1;
+
+  const humanTiles = [
+    { id: 1, color: 'red', value: 11, isJoker: false },
+    { id: 2, color: 'blue', value: 11, isJoker: false },
+    { id: 3, color: 'yellow', value: 11, isJoker: false },
+    { id: 4, color: 'black', value: 7, isJoker: false },
+    { id: 5, color: 'black', value: 8, isJoker: false },
+    { id: 6, color: 'black', value: 13, isJoker: false },
+    { id: 7, color: 'red', value: 4, isJoker: false },
+    { id: 8, color: 'blue', value: 9, isJoker: false },
+    { id: 9, color: 'yellow', value: 2, isJoker: false },
+    { id: 10, color: 'black', value: 5, isJoker: false },
+    { id: 11, color: 'red', value: 1, isJoker: false },
+    { id: 12, color: 'blue', value: 3, isJoker: false },
+    { id: 13, color: 'yellow', value: 6, isJoker: false },
+    { id: 14, color: 'red', value: 10, isJoker: false },
+  ];
+
+  const aiTiles = [
+    { id: 15, color: 'black', value: 10, isJoker: false },
+    { id: 16, color: 'black', value: 11, isJoker: false },
+    { id: 17, color: 'black', value: 12, isJoker: false },
+    { id: 18, color: 'red', value: 5, isJoker: false },
+    { id: 19, color: 'red', value: 6, isJoker: false },
+    { id: 20, color: 'red', value: 7, isJoker: false },
+    { id: 21, color: 'blue', value: 1, isJoker: false },
+    { id: 22, color: 'blue', value: 2, isJoker: false },
+    { id: 23, color: 'blue', value: 4, isJoker: false },
+    { id: 24, color: 'yellow', value: 8, isJoker: false },
+    { id: 25, color: 'yellow', value: 9, isJoker: false },
+    { id: 26, color: 'yellow', value: 10, isJoker: false },
+    { id: 27, color: 'black', value: 3, isJoker: false },
+    { id: 28, color: 'red', value: 2, isJoker: false },
+  ];
+
+  const jokerTile = { id: 29, color: null, value: null, isJoker: true };
+  const pool = [jokerTile];
+  let nextId = 30;
+  const colors = ['red', 'blue', 'yellow', 'black'];
+  for (let i = 0; i < 50; i++) {
+    pool.push({ id: nextId++, color: colors[i % 4], value: (i % 13) + 1, isJoker: false });
+  }
+
+  gameState = {
+    mode: 'tutorial',
+    difficulty: null,
+    players: [
+      { id: 'player1', rack: humanTiles, hasMelded: false },
+      { id: 'AI', rack: aiTiles, hasMelded: false },
+    ],
+    board: [],
+    pool,
+    currentPlayerIndex: 0,
+    turn: 0,
+    gameOver: false,
+    winner: null,
+  };
+
+  hideAllScreens();
+  document.getElementById('game-screen').style.display = 'flex';
+  document.getElementById('gameover-screen').style.display = 'none';
+  selectedTileIds = new Set();
+  selectedGroupIdx = -1;
+  isProcessing = false;
+  consecutiveEmptySkips = 0;
+  startTurn();
 }
 
 function startGame(mode, difficulty) {
@@ -318,7 +402,11 @@ function startTurn() {
   if (player.id === 'AI') {
     isProcessing = true;
     renderAll();
-    setTimeout(() => doAITurn(), 600);
+    if (isTutorialMode) {
+      setTimeout(() => doTutorialAITurn(), 600);
+    } else {
+      setTimeout(() => doAITurn(), 600);
+    }
     return;
   }
 
@@ -472,6 +560,43 @@ function doAITurn() {
   }
 }
 
+function doTutorialAITurn() {
+  console.log(`[Tutorial] AI turn, step ${tutorialGameStep}`);
+
+  if (tutorialGameStep === 2) {
+    const aiPlayer = gameState.players[1];
+    const tilesToPlay = aiPlayer.rack.filter(t => [15, 16, 17].includes(t.id));
+    const group = sortGroup([...tilesToPlay]);
+
+    aiPlayer.rack = aiPlayer.rack.filter(t => ![15, 16, 17].includes(t.id));
+    aiPlayer.hasMelded = true;
+    gameState.board.push(group);
+    gameState.turn++;
+    gameState.currentPlayerIndex = 0;
+    isProcessing = false;
+    tutorialGameStep = 3;
+    showMessage('AI played black 10-11-12 as a run!', 'success');
+    renderAll();
+    afterAITurn();
+
+  } else if (tutorialGameStep === 4) {
+    const aiPlayer = gameState.players[1];
+    const drawnTile = gameState.pool.splice(1, 1)[0];
+    aiPlayer.rack.push(drawnTile);
+    gameState.turn++;
+    gameState.currentPlayerIndex = 0;
+    isProcessing = false;
+    tutorialGameStep = 5;
+    showMessage('AI drew a tile and skipped', 'info');
+    renderAll();
+    afterAITurn();
+
+  } else {
+    isProcessing = false;
+    afterAITurn();
+  }
+}
+
 function getCurrentPlayer() {
   const idx = gameState.currentPlayerIndex;
   if (idx < 0 || idx >= gameState.players.length) return null;
@@ -515,6 +640,26 @@ function submitTurn() {
     return;
   }
 
+  if (isTutorialMode && tutorialGameStep === 1) {
+    const expected = [1, 2, 3];
+    if (playedIds.length !== expected.length || !expected.every(id => playedIds.includes(id))) {
+      showMessage('Step 1: Select the three 11 tiles (red, blue, yellow) to form a group!', 'error');
+      return;
+    }
+  }
+
+  if (isTutorialMode && tutorialGameStep === 5) {
+    const expected = [4, 5, 29];
+    if (playedIds.length !== expected.length || !expected.every(id => playedIds.includes(id))) {
+      showMessage('Step 5: Select black 7, black 8, and the Joker, then drag them to the black group!', 'error');
+      return;
+    }
+    if (pendingBoard.length !== 2) {
+      showMessage('Step 5: Drag the tiles into the existing black group, not a new group!', 'error');
+      return;
+    }
+  }
+
   const player = gameState.players[gameState.currentPlayerIndex];
   const manipulatedGroups = pendingBoard;
 
@@ -540,6 +685,16 @@ function submitTurn() {
   selectedGroupIdx = -1;
   showMessage(`Played ${tilesToPlay.length} tiles (${result.scoreDelta} pts)`, 'success');
 
+  if (isTutorialMode) {
+    if (tutorialGameStep === 1) {
+      tutorialGameStep = 2;
+    } else if (tutorialGameStep === 5) {
+      showMessage('Tutorial complete! You mastered the basics! 🎉', 'success');
+      isTutorialMode = false;
+      tutorialGameStep = 1;
+    }
+  }
+
   const winner = checkWin(gameState);
   if (winner) {
     showGameOver(winner);
@@ -551,7 +706,7 @@ function submitTurn() {
 
 function handleTurnTransition() {
   const nextPlayer = gameState.players[gameState.currentPlayerIndex];
-  if (gameState.mode === 'single') {
+  if (gameState.mode === 'single' || isTutorialMode || gameState.mode === 'tutorial') {
     setTimeout(startTurn, 50);
   } else {
     renderAll();
@@ -600,6 +755,27 @@ function drawAndSkip() {
 
   if (originalRackIds && originalRackIds.length > pendingRack.length) {
     showMessage('You have pending plays. Cancel or submit first.', 'error');
+    return;
+  }
+
+  if (isTutorialMode && tutorialGameStep === 3) {
+    const state = JSON.parse(JSON.stringify(gameState));
+    const player = state.players[0];
+    const jokerTile = state.pool.splice(0, 1)[0];
+    player.rack.push(jokerTile);
+    state.turn++;
+    state.currentPlayerIndex = (state.currentPlayerIndex + 1) % state.players.length;
+    gameState = state;
+    pendingRack = null;
+    pendingBoard = null;
+    originalRackIds = null;
+    selectedTileIds = new Set();
+    selectedGroupIdx = -1;
+    consecutiveEmptySkips = 0;
+    tutorialGameStep = 4;
+    showMessage('You drew a Joker! (Wild tile - can represent any tile)', 'success');
+    renderAll();
+    handleTurnTransition();
     return;
   }
 
@@ -699,7 +875,7 @@ function renderGameInfo() {
   const players = gameState.players;
   const turnEl = document.getElementById('turn-indicator');
 
-  const isSingle = gameState.mode === 'single';
+  const isSingle = gameState.mode === 'single' || isTutorialMode;
   players.forEach((p, i) => {
     const infoEl = document.getElementById(i === 0 ? 'player1-info' : 'player2-info');
     const countEl = document.getElementById(i === 0 ? 'count-p1' : 'count-p2');
@@ -723,11 +899,21 @@ function renderGameInfo() {
 
   if (current) {
     const label = current.id === 'player1' ? 'Player 1' : (current.id === 'player2' ? 'Player 2' : 'AI');
-    turnEl.textContent = `Turn: ${label}`;
+    turnEl.textContent = isTutorialMode ? `Tutorial - ${label}` : `Turn: ${label}`;
   }
 
   const meldEl = document.getElementById('meld-status');
-  if (current && !current.hasMelded) {
+  if (isTutorialMode) {
+    const hints = {
+      1: 'Step 1/5: Drag red 11, blue 11, yellow 11 to board → Submit',
+      2: 'Step 2/5: AI plays black 10-11-12...',
+      3: 'Step 3/5: No valid play → click Draw & Skip',
+      4: 'Step 4/5: AI is drawing...',
+      5: 'Step 5/5: Drag black 7, black 8, Joker to black group!',
+    };
+    meldEl.textContent = hints[tutorialGameStep] || `Step ${tutorialGameStep}/5`;
+    meldEl.style.color = '#f39c12';
+  } else if (current && !current.hasMelded) {
     meldEl.textContent = '⚠ Meld 30+';
   } else if (current) {
     meldEl.textContent = '✓ Melded';
@@ -788,12 +974,23 @@ function renderRack() {
 
   rack.forEach(tile => {
     const selected = selectedTileIds.has(tile.id);
-    container.appendChild(createTileElement(tile, {
+    const el = createTileElement(tile, {
       clickable: true,
       selected,
       committed: false,
       id: tile.id,
-    }));
+    });
+    if (isTutorialMode) {
+      const highlightIds = {
+        1: [1, 2, 3],
+        5: [4, 5, 29],
+      };
+      const ids = highlightIds[tutorialGameStep] || [];
+      if (ids.includes(tile.id)) {
+        el.classList.add('tutorial-highlight');
+      }
+    }
+    container.appendChild(el);
   });
 
   if (rack.length === 0) {
@@ -932,9 +1129,8 @@ function showTutorialStep() {
     nextBtn.textContent = step.startGame ? "Let's Play! 🎮" : (step.last ? "Let's Play! 🎮" : 'Next ➡');
     nextBtn.addEventListener('click', () => {
       if (step.startGame) {
-        startGame('single', 'normal');
-        tutorialStep++;
-        showTutorialStep();
+        endTutorial();
+        startTutorialGame();
       } else if (step.last) {
         endTutorial();
       } else {

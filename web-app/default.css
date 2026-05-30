@@ -375,6 +375,16 @@ body {
   border: 2px solid rgba(255,255,255,0.1);
 }
 
+.tutorial-highlight {
+  box-shadow: 0 0 0 3px #f39c12, 0 0 16px rgba(243, 156, 18, 0.5) !important;
+  animation: tutorialPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes tutorialPulse {
+  0%, 100% { box-shadow: 0 0 0 3px #f39c12, 0 0 16px rgba(243, 156, 18, 0.5); }
+  50% { box-shadow: 0 0 0 6px #f39c12, 0 0 24px rgba(243, 156, 18, 0.7); }
+}
+
 /* Controls */
 #controls {
   display: flex;
