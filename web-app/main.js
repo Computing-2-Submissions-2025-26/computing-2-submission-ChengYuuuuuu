@@ -713,6 +713,7 @@ function submitTurn() {
 
   if (isTutorialMode && awaitingInitialMeld) {
     awaitingInitialMeld = false;
+    document.getElementById('draw-btn').disabled = false;
     const overlay = document.getElementById('tutorial-overlay');
     overlay.classList.add('active');
     tutorialQueue = [...tutorialNo];
@@ -1070,7 +1071,7 @@ function updateControls() {
   const hasPending = pendingRack && originalRackIds && (originalRackIds.length > pendingRack.length);
   document.getElementById('submit-btn').disabled = !hasPending || isProcessing;
   document.getElementById('cancel-btn').disabled = !hasPending || isProcessing;
-  document.getElementById('draw-btn').disabled = isProcessing;
+  document.getElementById('draw-btn').disabled = isProcessing || awaitingInitialMeld;
 }
 
 // --- Tutorial ---
@@ -1172,16 +1173,15 @@ function showTutorialStep() {
     document.getElementById('tutorial-content').insertBefore(grid, document.getElementById('tutorial-buttons'));
   }
 
-  if (tutorialStep === 3) {
-    const rackArea = document.getElementById('rack-area');
-    if (rackArea) {
-      const rect = rackArea.getBoundingClientRect();
-      overlay.classList.add('has-spotlight');
-      overlay.style.setProperty('--spotlight-x', rect.left + 'px');
-      overlay.style.setProperty('--spotlight-y', rect.top + 'px');
-      overlay.style.setProperty('--spotlight-w', rect.width + 'px');
-      overlay.style.setProperty('--spotlight-h', rect.height + 'px');
-    }
+  if (tutorialStep === 3|tutorialStep === 8) {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const sw = 800, sh = 90, bottom = 10;
+    overlay.classList.add('has-spotlight');
+    overlay.style.setProperty('--spotlight-x', ((w - sw) / 2) + 'px');
+    overlay.style.setProperty('--spotlight-y', (h - sh - bottom) + 'px');
+    overlay.style.setProperty('--spotlight-w', sw + 'px');
+    overlay.style.setProperty('--spotlight-h', sh + 'px');
   }
 
   if (tutorialStep === 4) {
@@ -1192,6 +1192,18 @@ function showTutorialStep() {
     const offsetFromCenter = -300;
     overlay.style.setProperty('--spotlight-x', ((w - sw) / 2 + offsetFromCenter) + 'px');
     overlay.style.setProperty('--spotlight-y', (h - sh - bottom) + 'px');
+    overlay.style.setProperty('--spotlight-w', sw + 'px');
+    overlay.style.setProperty('--spotlight-h', sh + 'px');
+  }
+
+  if (tutorialStep === 6) {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const sw = 400, sh = 100, top = 90;
+    overlay.classList.add('has-spotlight');
+    const offsetFromCenter = -540;
+    overlay.style.setProperty('--spotlight-x', ((w - sw) / 2 + offsetFromCenter) + 'px');
+    overlay.style.setProperty('--spotlight-y', (top) + 'px');
     overlay.style.setProperty('--spotlight-w', sw + 'px');
     overlay.style.setProperty('--spotlight-h', sh + 'px');
   }
@@ -1239,6 +1251,7 @@ function showTutorialStep() {
       } else if (tutorialStep === 4) {
         endTutorial();
         awaitingInitialMeld = true;
+        document.getElementById('draw-btn').disabled = true;
       } else {
         tutorialStep++;
         showTutorialStep();
