@@ -120,23 +120,6 @@ body {
   color: #1a1a2e;
 }
 
-#start-music-btn {
-  margin-top: 24px;
-  padding: 10px 28px;
-  font-size: 1rem;
-  border: 1px solid #555;
-  background: transparent;
-  color: #888;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-#start-music-btn:hover {
-  background: #555;
-  color: #eee;
-}
-
 /* Top Bar */
 #top-bar {
   display: flex;

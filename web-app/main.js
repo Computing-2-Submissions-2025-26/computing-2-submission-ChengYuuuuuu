@@ -13,10 +13,36 @@ let dragData = null;
 let consecutiveEmptySkips = 0;
 let aiFadeTileIds = null;
 
+const bgm = document.getElementById('bgm');
+bgm.volume = 0.5;
+let musicOn = false;
+
+function toggleMusic() {
+  musicOn = !musicOn;
+  const btn = document.getElementById('music-btn');
+  if (btn) btn.textContent = musicOn ? '🔊 Music' : '🔇 Music';
+  if (musicOn) bgm.play();
+  else bgm.pause();
+}
+
+function stopMusic() {
+  bgm.pause();
+  musicOn = false;
+  const btn = document.getElementById('music-btn');
+  if (btn) btn.textContent = '🔇 Music';
+}
+
 setupEventListeners();
 showStartScreen();
 
+bgm.play().then(() => {
+  musicOn = true;
+  const btn = document.getElementById('music-btn');
+  if (btn) btn.textContent = '🔊 Music';
+}).catch(() => {});
+
 function showStartScreen() {
+  stopMusic();
   hideAllScreens();
   document.getElementById('start-screen').style.display = 'block';
 }
@@ -33,33 +59,14 @@ function setupEventListeners() {
     if (!btn) return;
     const mode = btn.dataset.mode;
     const difficulty = btn.dataset.difficulty || null;
+    if (!musicOn) toggleMusic();
     startGame(mode, difficulty);
   });
 
   document.getElementById('new-game-btn').addEventListener('click', showStartScreen);
   document.getElementById('play-again-btn').addEventListener('click', showStartScreen);
 
-  const bgm = document.getElementById('bgm');
-  const musicBtns = [document.getElementById('music-btn'), document.getElementById('start-music-btn')];
-  let musicOn = false;
-
-  function toggleMusic() {
-    musicOn = !musicOn;
-    const label = musicOn ? '🔊 Music' : '🔇 Music';
-    musicBtns.forEach(b => { if (b) b.textContent = label; });
-    if (musicOn) bgm.play();
-    else bgm.pause();
-  }
-
-  function startMusic() {
-    if (!musicOn) toggleMusic();
-  }
-
-  musicBtns.forEach(b => {
-    if (b) b.addEventListener('click', toggleMusic);
-  });
-
-  document.querySelector('.mode-buttons').addEventListener('click', startMusic, { once: true });
+  document.getElementById('music-btn').addEventListener('click', toggleMusic);
 
   document.getElementById('submit-btn').addEventListener('click', submitTurn);
   document.getElementById('cancel-btn').addEventListener('click', cancelTurn);
@@ -637,6 +644,7 @@ function drawAndSkip() {
 }
 
 function showGameOver(winnerId) {
+  stopMusic();
   hideAllScreens();
   document.getElementById('gameover-screen').style.display = 'flex';
   const label = winnerId === 'player1' ? 'Player 1' : (winnerId === 'player2' ? 'Player 2' : 'AI');
@@ -859,8 +867,7 @@ const tutorialScript = [
 ];
 
 const tutorialYes = [
-  { emoji: '😊', text: 'Awesome! Let\'s jump right into the game then!' },
-  { emoji: '🥳', text: 'Have fun and good luck!', last: true },
+  { emoji: '🥳', text: 'Awesome! Let\'s jump right into the game then!', last: true },
 ];
 
 const tutorialNo = [
