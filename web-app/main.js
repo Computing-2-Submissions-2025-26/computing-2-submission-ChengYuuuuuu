@@ -15,6 +15,7 @@ let aiFadeTileIds = null;
 let isTutorialMode = false;
 let tutorialGameStep = 1;
 let awaitingInitialMeld = false;
+let showAIPlayComplete = false;
 
 const bgm = document.getElementById('bgm');
 bgm.volume = 0.5;
@@ -445,6 +446,15 @@ function afterAITurn() {
     console.error('checkWin error');
   }
   try { startTurn(); } catch (_) { setTimeout(startTurn, 100); }
+
+  if (isTutorialMode && showAIPlayComplete) {
+    showAIPlayComplete = false;
+    const overlay = document.getElementById('tutorial-overlay');
+    overlay.classList.add('active');
+    tutorialQueue = [...tutorialNo];
+    tutorialStep = 6;
+    showTutorialStep();
+  }
 }
 
 function animateAIMove(tilesToPlay, newGameState) {
@@ -565,20 +575,25 @@ function doTutorialAITurn() {
   console.log(`[Tutorial] AI turn, step ${tutorialGameStep}`);
 
   if (tutorialGameStep === 2) {
-    const aiPlayer = gameState.players[1];
-    const tilesToPlay = aiPlayer.rack.filter(t => [15, 16, 17].includes(t.id));
-    const group = sortGroup([...tilesToPlay]);
-
-    aiPlayer.rack = aiPlayer.rack.filter(t => ![15, 16, 17].includes(t.id));
-    aiPlayer.hasMelded = true;
-    gameState.board.push(group);
-    gameState.turn++;
-    gameState.currentPlayerIndex = 0;
-    isProcessing = false;
-    tutorialGameStep = 3;
-    showMessage('AI played black 10-11-12 as a run!', 'success');
+    showMessage('AI is thinking...', 'info');
     renderAll();
-    afterAITurn();
+    setTimeout(() => {
+      const aiPlayer = gameState.players[1];
+      const tilesToPlay = aiPlayer.rack.filter(t => [15, 16, 17].includes(t.id));
+      const group = sortGroup([...tilesToPlay]);
+
+      aiPlayer.rack = aiPlayer.rack.filter(t => ![15, 16, 17].includes(t.id));
+      aiPlayer.hasMelded = true;
+      gameState.board.push(group);
+      gameState.turn++;
+      gameState.currentPlayerIndex = 0;
+      isProcessing = false;
+      tutorialGameStep = 3;
+      showAIPlayComplete = true;
+      showMessage('AI played black 10-11-12 as a run!', 'success');
+      renderAll();
+      afterAITurn();
+    }, 1000);
 
   } else if (tutorialGameStep === 4) {
     const aiPlayer = gameState.players[1];
@@ -703,6 +718,7 @@ function submitTurn() {
     tutorialQueue = [...tutorialNo];
     tutorialStep = 5;
     showTutorialStep();
+    return;
   }
 
   const winner = checkWin(gameState);
@@ -1078,7 +1094,7 @@ const tutorialNo = [
   { emoji: '🤔', text: 'After your initial meld, you can rearrange tiles on the table. Add, split, move – as long as every group stays valid.' },
   { emoji: '😮', text: "Oh no! It looks like you don't have any tiles to submit. If you cannot play any tile, you must draw one tile from the pool. Then your turn ends." },
   { emoji: '🥳', text: "You drew a Joker! If you have a tile that matches what the Joker represents, you can replace it and take the Joker. Now try using the Joker to make a valid group!" },
-  { emoji: '🥳', text: 'The first player to empty their rack wins! That\'s all the rules. Ready to play?', startGame: true },
+  { emoji: '🥳', text: 'The first player to empty their rack wins! That\'s all the rules. Ready to play?', last: true },
 ];
 
 let tutorialQueue = [];
@@ -1216,6 +1232,10 @@ function showTutorialStep() {
         startTutorialGame();
       } else if (step.last) {
         endTutorial();
+      } else if (tutorialStep === 5) {
+        endTutorial();
+        gameState.currentPlayerIndex = 1;
+        startTurn();
       } else if (tutorialStep === 4) {
         endTutorial();
         awaitingInitialMeld = true;

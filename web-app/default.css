@@ -659,6 +659,7 @@ body {
   align-items: flex-start;
   box-shadow: 0 8px 40px rgba(0,0,0,0.5);
   position: relative;
+  z-index: 2;
 }
 
 #tutorial-avatar {
