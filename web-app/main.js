@@ -1072,12 +1072,13 @@ const tutorialNo = [
   { emoji: '🤔', text: 'First, the tiles. There are 4 colors: red, blue, yellow, black. Numbers 1 to 13, each twice.' },
   { emoji: '😊', text: 'Plus 2 joker tiles. They can be any number or color you need.' },
   { emoji: '🥳', text: 'Your goal: be the first to play ALL tiles from your rack. You start with 14 tiles.' },
-  { emoji: '😊', text: 'Your first play must score at least 30 points. That\'s called the "initial meld".' },
+  { emoji: '😊', text: 'Your first play must score at least 30 points. That\'s called the "initial meld". Now try putting these three tiles (red 11, blue 11, yellow 11) onto the board, then click Submit!' },
+  { emoji: '😊', text: "Now it's AI's turn." },
   { emoji: '🤔', text: 'A valid group has at least 3 tiles. Two types: same number different colors, or same color consecutive numbers.' },
   { emoji: '🤔', text: 'After your initial meld, you can rearrange tiles on the table. Add, split, move – as long as every group stays valid.' },
-  { emoji: '😊', text: 'If you have the tile a joker represents, you can replace it and take the joker. Then you must use it right away.' },
-  { emoji: '😊', text: 'If you cannot play any tile, you must draw one tile from the pool. Then your turn ends.' },
-  { emoji: '🥳', text: 'The first player to empty their rack wins! That\'s all the rules. Ready to play?', last: true },
+  { emoji: '😮', text: "Oh no! It looks like you don't have any tiles to submit. If you cannot play any tile, you must draw one tile from the pool. Then your turn ends." },
+  { emoji: '🥳', text: "You drew a Joker! If you have a tile that matches what the Joker represents, you can replace it and take the Joker. Now try using the Joker to make a valid group!" },
+  { emoji: '🥳', text: 'The first player to empty their rack wins! That\'s all the rules. Ready to play?', startGame: true },
 ];
 
 let tutorialQueue = [];
