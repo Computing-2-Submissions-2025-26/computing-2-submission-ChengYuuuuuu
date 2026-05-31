@@ -14,6 +14,7 @@ let consecutiveEmptySkips = 0;
 let aiFadeTileIds = null;
 let isTutorialMode = false;
 let tutorialGameStep = 1;
+let awaitingInitialMeld = false;
 
 const bgm = document.getElementById('bgm');
 bgm.volume = 0.5;
@@ -695,6 +696,15 @@ function submitTurn() {
     }
   }
 
+  if (isTutorialMode && awaitingInitialMeld) {
+    awaitingInitialMeld = false;
+    const overlay = document.getElementById('tutorial-overlay');
+    overlay.classList.add('active');
+    tutorialQueue = [...tutorialNo];
+    tutorialStep = 5;
+    showTutorialStep();
+  }
+
   const winner = checkWin(gameState);
   if (winner) {
     showGameOver(winner);
@@ -1206,6 +1216,9 @@ function showTutorialStep() {
         startTutorialGame();
       } else if (step.last) {
         endTutorial();
+      } else if (tutorialStep === 4) {
+        endTutorial();
+        awaitingInitialMeld = true;
       } else {
         tutorialStep++;
         showTutorialStep();
