@@ -1093,8 +1093,8 @@ const tutorialNo = [
   { emoji: '😊', text: "Now it's AI's turn." },
   { emoji: '🤔', text: 'A valid group has at least 3 tiles. Two types: same number different colors, or same color consecutive numbers.' },
   { emoji: '🤔', text: 'After your initial meld, you can rearrange tiles on the table. Add, split, move – as long as every group stays valid.' },
-  { emoji: '😊', text: 'If you have the tile a joker represents, you can replace it and take the joker. Then you must use it right away.' },
-  { emoji: '😊', text: 'If you cannot play any tile, you must draw one tile from the pool. Then your turn ends.' },
+  { emoji: '😮', text: "Oh no! It looks like you don't have any tiles to submit. If you cannot play any tile, you must draw one tile from the pool. Then your turn ends." },
+  { emoji: '🥳', text: "You drew a Joker! If you have a tile that matches what the Joker represents, you can replace it and take the Joker. Now try using the Joker to make a valid group!" },
   { emoji: '🥳', text: 'The first player to empty their rack wins! That\'s all the rules. Ready to play?', last: true },
 ];
 
@@ -1173,16 +1173,15 @@ function showTutorialStep() {
     document.getElementById('tutorial-content').insertBefore(grid, document.getElementById('tutorial-buttons'));
   }
 
-  if (tutorialStep === 3) {
-    const rackArea = document.getElementById('rack-area');
-    if (rackArea) {
-      const rect = rackArea.getBoundingClientRect();
-      overlay.classList.add('has-spotlight');
-      overlay.style.setProperty('--spotlight-x', rect.left + 'px');
-      overlay.style.setProperty('--spotlight-y', rect.top + 'px');
-      overlay.style.setProperty('--spotlight-w', rect.width + 'px');
-      overlay.style.setProperty('--spotlight-h', rect.height + 'px');
-    }
+  if (tutorialStep === 3|tutorialStep === 8) {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const sw = 800, sh = 90, bottom = 10;
+    overlay.classList.add('has-spotlight');
+    overlay.style.setProperty('--spotlight-x', ((w - sw) / 2) + 'px');
+    overlay.style.setProperty('--spotlight-y', (h - sh - bottom) + 'px');
+    overlay.style.setProperty('--spotlight-w', sw + 'px');
+    overlay.style.setProperty('--spotlight-h', sh + 'px');
   }
 
   if (tutorialStep === 4) {
@@ -1196,6 +1195,19 @@ function showTutorialStep() {
     overlay.style.setProperty('--spotlight-w', sw + 'px');
     overlay.style.setProperty('--spotlight-h', sh + 'px');
   }
+
+  if (tutorialStep === 6) {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const sw = 400, sh = 90, top = 90;
+    overlay.classList.add('has-spotlight');
+    const offsetFromCenter = -540;
+    overlay.style.setProperty('--spotlight-x', ((w - sw) / 2 + offsetFromCenter) + 'px');
+    overlay.style.setProperty('--spotlight-y', top + 'px');
+    overlay.style.setProperty('--spotlight-w', sw + 'px');
+    overlay.style.setProperty('--spotlight-h', sh + 'px');
+  }
+
 
   const btnContainer = document.getElementById('tutorial-buttons');
   btnContainer.innerHTML = '';
