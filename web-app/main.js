@@ -1173,41 +1173,6 @@ function showTutorialStep() {
     document.getElementById('tutorial-content').insertBefore(grid, document.getElementById('tutorial-buttons'));
   }
 
-<<<<<<< HEAD
-  if (tutorialStep === 3|tutorialStep === 8) {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    const sw = 800, sh = 90, bottom = 10;
-    overlay.classList.add('has-spotlight');
-    overlay.style.setProperty('--spotlight-x', ((w - sw) / 2) + 'px');
-    overlay.style.setProperty('--spotlight-y', (h - sh - bottom) + 'px');
-    overlay.style.setProperty('--spotlight-w', sw + 'px');
-    overlay.style.setProperty('--spotlight-h', sh + 'px');
-  }
-
-  if (tutorialStep === 4) {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    const sw = 200, sh = 90, bottom = 10;
-    overlay.classList.add('has-spotlight');
-    const offsetFromCenter = -300;
-    overlay.style.setProperty('--spotlight-x', ((w - sw) / 2 + offsetFromCenter) + 'px');
-    overlay.style.setProperty('--spotlight-y', (h - sh - bottom) + 'px');
-    overlay.style.setProperty('--spotlight-w', sw + 'px');
-    overlay.style.setProperty('--spotlight-h', sh + 'px');
-  }
-
-  if (tutorialStep === 6) {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    const sw = 400, sh = 100, top = 90;
-    overlay.classList.add('has-spotlight');
-    const offsetFromCenter = -540;
-    overlay.style.setProperty('--spotlight-x', ((w - sw) / 2 + offsetFromCenter) + 'px');
-    overlay.style.setProperty('--spotlight-y', (top) + 'px');
-    overlay.style.setProperty('--spotlight-w', sw + 'px');
-    overlay.style.setProperty('--spotlight-h', sh + 'px');
-=======
   if (tutorialStep === 3) {
     const rackArea = document.getElementById('rack-area');
     if (rackArea) {
@@ -1218,7 +1183,6 @@ function showTutorialStep() {
       overlay.style.setProperty('--spotlight-w', rect.width + 'px');
       overlay.style.setProperty('--spotlight-h', rect.height + 'px');
     }
->>>>>>> e1b8fb2 (指令4-1)
   }
 
   if (tutorialStep === 4) {
