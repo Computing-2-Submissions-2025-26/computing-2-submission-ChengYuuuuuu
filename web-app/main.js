@@ -1221,6 +1221,18 @@ function showTutorialStep() {
 >>>>>>> e1b8fb2 (指令4-1)
   }
 
+  if (tutorialStep === 4) {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const sw = 200, sh = 90, bottom = 10;
+    overlay.classList.add('has-spotlight');
+    const offsetFromCenter = -300;
+    overlay.style.setProperty('--spotlight-x', ((w - sw) / 2 + offsetFromCenter) + 'px');
+    overlay.style.setProperty('--spotlight-y', (h - sh - bottom) + 'px');
+    overlay.style.setProperty('--spotlight-w', sw + 'px');
+    overlay.style.setProperty('--spotlight-h', sh + 'px');
+  }
+
   const btnContainer = document.getElementById('tutorial-buttons');
   btnContainer.innerHTML = '';
 
