@@ -16,6 +16,8 @@ let isTutorialMode = false;
 let tutorialGameStep = 1;
 let awaitingInitialMeld = false;
 let showAIPlayComplete = false;
+let awaitingDraw = false;
+let awaitingJokerPlay = false;
 
 const bgm = document.getElementById('bgm');
 bgm.volume = 0.5;
@@ -701,6 +703,17 @@ function submitTurn() {
   selectedGroupIdx = -1;
   showMessage(`Played ${tilesToPlay.length} tiles (${result.scoreDelta} pts)`, 'success');
 
+  if (isTutorialMode && awaitingJokerPlay) {
+    awaitingJokerPlay = false;
+    document.getElementById('draw-btn').disabled = false;
+    const overlay = document.getElementById('tutorial-overlay');
+    overlay.classList.add('active');
+    tutorialQueue = [...tutorialNo];
+    tutorialStep = 10;
+    showTutorialStep();
+    return;
+  }
+
   if (isTutorialMode) {
     if (tutorialGameStep === 1) {
       tutorialGameStep = 2;
@@ -800,6 +813,16 @@ function drawAndSkip() {
     selectedGroupIdx = -1;
     consecutiveEmptySkips = 0;
     tutorialGameStep = 4;
+
+    if (awaitingDraw) {
+      awaitingDraw = false;
+      const overlay = document.getElementById('tutorial-overlay');
+      overlay.classList.add('active');
+      tutorialQueue = [...tutorialNo];
+      tutorialStep = 9;
+      showTutorialStep();
+    }
+
     showMessage('You drew a Joker! (Wild tile - can represent any tile)', 'success');
     renderAll();
     handleTurnTransition();
@@ -1069,9 +1092,9 @@ function createTileElement(tile, opts = {}) {
 
 function updateControls() {
   const hasPending = pendingRack && originalRackIds && (originalRackIds.length > pendingRack.length);
-  document.getElementById('submit-btn').disabled = !hasPending || isProcessing;
-  document.getElementById('cancel-btn').disabled = !hasPending || isProcessing;
-  document.getElementById('draw-btn').disabled = isProcessing || awaitingInitialMeld;
+  document.getElementById('submit-btn').disabled = !hasPending || isProcessing || awaitingDraw;
+  document.getElementById('cancel-btn').disabled = !hasPending || isProcessing || awaitingDraw;
+  document.getElementById('draw-btn').disabled = isProcessing || awaitingInitialMeld || awaitingJokerPlay;
 }
 
 // --- Tutorial ---
@@ -1208,6 +1231,18 @@ function showTutorialStep() {
     overlay.style.setProperty('--spotlight-h', sh + 'px');
   }
 
+  if (tutorialStep === 9) {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const sw = 80, sh = 90, bottom = 10;
+    overlay.classList.add('has-spotlight');
+    const offsetFromCenter = 300;
+    overlay.style.setProperty('--spotlight-x', ((w - sw) / 2 + offsetFromCenter) + 'px');
+    overlay.style.setProperty('--spotlight-y', (h - sh - bottom) + 'px');
+    overlay.style.setProperty('--spotlight-w', sw + 'px');
+    overlay.style.setProperty('--spotlight-h', sh + 'px');
+  }
+
 
   const btnContainer = document.getElementById('tutorial-buttons');
   btnContainer.innerHTML = '';
@@ -1249,6 +1284,13 @@ function showTutorialStep() {
         endTutorial();
         gameState.currentPlayerIndex = 1;
         startTurn();
+      } else if (tutorialStep === 8) {
+        endTutorial();
+        awaitingDraw = true;
+      } else if (tutorialStep === 9) {
+        endTutorial();
+        awaitingJokerPlay = true;
+        document.getElementById('draw-btn').disabled = true;
       } else if (tutorialStep === 4) {
         endTutorial();
         awaitingInitialMeld = true;
