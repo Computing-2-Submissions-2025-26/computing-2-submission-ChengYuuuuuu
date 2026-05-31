@@ -1173,6 +1173,7 @@ function showTutorialStep() {
     document.getElementById('tutorial-content').insertBefore(grid, document.getElementById('tutorial-buttons'));
   }
 
+<<<<<<< HEAD
   if (tutorialStep === 3|tutorialStep === 8) {
     const w = window.innerWidth;
     const h = window.innerHeight;
@@ -1206,6 +1207,18 @@ function showTutorialStep() {
     overlay.style.setProperty('--spotlight-y', (top) + 'px');
     overlay.style.setProperty('--spotlight-w', sw + 'px');
     overlay.style.setProperty('--spotlight-h', sh + 'px');
+=======
+  if (tutorialStep === 3) {
+    const rackArea = document.getElementById('rack-area');
+    if (rackArea) {
+      const rect = rackArea.getBoundingClientRect();
+      overlay.classList.add('has-spotlight');
+      overlay.style.setProperty('--spotlight-x', rect.left + 'px');
+      overlay.style.setProperty('--spotlight-y', rect.top + 'px');
+      overlay.style.setProperty('--spotlight-w', rect.width + 'px');
+      overlay.style.setProperty('--spotlight-h', rect.height + 'px');
+    }
+>>>>>>> e1b8fb2 (指令4-1)
   }
 
   const btnContainer = document.getElementById('tutorial-buttons');
