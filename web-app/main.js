@@ -980,16 +980,6 @@ function renderRack() {
       committed: false,
       id: tile.id,
     });
-    if (isTutorialMode) {
-      const highlightIds = {
-        1: [1, 2, 3],
-        5: [4, 5, 29],
-      };
-      const ids = highlightIds[tutorialGameStep] || [];
-      if (ids.includes(tile.id)) {
-        el.classList.add('tutorial-highlight');
-      }
-    }
     container.appendChild(el);
   });
 
@@ -1098,9 +1088,75 @@ function showTutorialStep() {
     return;
   }
 
+  const dialog = document.getElementById('tutorial-dialog');
+  dialog.classList.toggle('tutorial-tile-step', tutorialStep === 1 || tutorialStep === 2);
+
   const step = tutorialQueue[tutorialStep];
   document.getElementById('tutorial-emoji').textContent = step.emoji;
   document.getElementById('tutorial-text').textContent = step.text;
+
+  const existingGrid = document.getElementById('tutorial-tile-grid');
+  if (existingGrid) existingGrid.remove();
+
+  const overlay = document.getElementById('tutorial-overlay');
+  overlay.classList.remove('has-spotlight');
+  overlay.style.removeProperty('--spotlight-x');
+  overlay.style.removeProperty('--spotlight-y');
+  overlay.style.removeProperty('--spotlight-w');
+  overlay.style.removeProperty('--spotlight-h');
+
+  if (tutorialStep === 1 || tutorialStep === 2) {
+    const grid = document.createElement('div');
+    grid.id = 'tutorial-tile-grid';
+    if (tutorialStep === 2) grid.classList.add('joker-focus');
+
+    const colors = ['red', 'blue', 'yellow', 'black'];
+    const colorLabels = { red: 'R', blue: 'B', yellow: 'Y', black: 'K' };
+
+    for (const color of colors) {
+      const row = document.createElement('div');
+      row.className = 'tutorial-tile-row';
+      const label = document.createElement('span');
+      label.className = 'tutorial-tile-label';
+      label.textContent = colorLabels[color];
+      row.appendChild(label);
+      for (let value = 1; value <= 13; value++) {
+        const tile = document.createElement('div');
+        tile.className = `tutorial-tile ${color}`;
+        tile.textContent = value;
+        row.appendChild(tile);
+      }
+      grid.appendChild(row);
+    }
+
+    const jokerRow = document.createElement('div');
+    jokerRow.className = 'tutorial-tile-row';
+    const jokerLabel = document.createElement('span');
+    jokerLabel.className = 'tutorial-tile-label';
+    jokerLabel.textContent = '★';
+    jokerRow.appendChild(jokerLabel);
+    for (let i = 0; i < 2; i++) {
+      const tile = document.createElement('div');
+      tile.className = 'tutorial-tile joker';
+      tile.textContent = '★';
+      jokerRow.appendChild(tile);
+    }
+    grid.appendChild(jokerRow);
+
+    document.getElementById('tutorial-content').insertBefore(grid, document.getElementById('tutorial-buttons'));
+  }
+
+  if (tutorialStep === 3) {
+    const rackArea = document.getElementById('rack-area');
+    if (rackArea) {
+      const rect = rackArea.getBoundingClientRect();
+      overlay.classList.add('has-spotlight');
+      overlay.style.setProperty('--spotlight-x', rect.left + 'px');
+      overlay.style.setProperty('--spotlight-y', rect.top + 'px');
+      overlay.style.setProperty('--spotlight-w', rect.width + 'px');
+      overlay.style.setProperty('--spotlight-h', rect.height + 'px');
+    }
+  }
 
   const btnContainer = document.getElementById('tutorial-buttons');
   btnContainer.innerHTML = '';
@@ -1150,6 +1206,7 @@ function showTutorialStep() {
 function endTutorial() {
   const overlay = document.getElementById('tutorial-overlay');
   overlay.classList.remove('active');
+  overlay.classList.remove('has-spotlight');
   tutorialQueue = [];
   tutorialStep = 0;
 }

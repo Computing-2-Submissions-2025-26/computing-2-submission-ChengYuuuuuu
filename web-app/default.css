@@ -542,6 +542,97 @@ body {
   to { opacity: 0; transform: scale(1.1); }
 }
 
+#tutorial-dialog.tutorial-tile-step {
+  max-width: 680px;
+}
+
+#tutorial-tile-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tutorial-tile-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tutorial-tile-label {
+  width: 16px;
+  font-size: 0.6rem;
+  font-weight: bold;
+  color: #888;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.tutorial-tile {
+  width: 22px;
+  height: 30px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.55rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+}
+
+.tutorial-tile.red { background: #c0392b; color: #fff; }
+.tutorial-tile.blue { background: #2980b9; color: #fff; }
+.tutorial-tile.yellow { background: #f1c40f; color: #1a1a2e; }
+.tutorial-tile.black { background: #2c3e50; color: #fff; }
+.tutorial-tile.joker {
+  background: linear-gradient(135deg, #8e44ad, #e74c3c, #f39c12);
+  color: #fff;
+  opacity: 0.2;
+  filter: grayscale(1);
+  position: relative;
+}
+.tutorial-tile.joker::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+#tutorial-tile-grid.joker-focus .tutorial-tile:not(.joker) {
+  opacity: 0.2;
+  filter: grayscale(1);
+}
+
+#tutorial-tile-grid.joker-focus .tutorial-tile.joker {
+  opacity: 1;
+  filter: none;
+  background: linear-gradient(135deg, #8e44ad, #e74c3c, #f39c12);
+  color: #fff;
+}
+
+#tutorial-tile-grid.joker-focus .tutorial-tile.joker::after {
+  display: none;
+}
+
+#tutorial-overlay.has-spotlight {
+  background: transparent;
+}
+
+#tutorial-overlay.has-spotlight::before {
+  content: '';
+  position: fixed;
+  left: var(--spotlight-x);
+  top: var(--spotlight-y);
+  width: var(--spotlight-w);
+  height: var(--spotlight-h);
+  border-radius: 8px;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.6);
+  pointer-events: none;
+  z-index: 1;
+}
+
 /* Tutorial */
 #tutorial-overlay {
   position: fixed;
