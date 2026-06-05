@@ -574,6 +574,10 @@ function doAITurn() {
 }
 
 function doTutorialAITurn() {
+  if (!isTutorialMode) {
+    doAITurn();
+    return;
+  }
   console.log(`[Tutorial] AI turn, step ${tutorialGameStep}`);
 
   if (tutorialGameStep === 2) {
@@ -719,8 +723,8 @@ function submitTurn() {
       tutorialGameStep = 2;
     } else if (tutorialGameStep === 5) {
       showMessage('Tutorial complete! You mastered the basics! 🎉', 'success');
-      isTutorialMode = false;
-      tutorialGameStep = 1;
+      disableTutorialMode();
+      return;
     }
   }
 
@@ -1279,7 +1283,7 @@ function showTutorialStep() {
         endTutorial();
         startTutorialGame();
       } else if (step.last) {
-        endTutorial();
+        disableTutorialMode();
       } else if (tutorialStep === 5) {
         endTutorial();
         gameState.currentPlayerIndex = 1;
@@ -1312,7 +1316,42 @@ function endTutorial() {
   tutorialStep = 0;
 }
 
-document.getElementById('tutorial-skip').addEventListener('click', endTutorial);
+function disableTutorialMode() {
+  endTutorial();
+
+  isTutorialMode = false;
+  tutorialGameStep = 1;
+  awaitingInitialMeld = false;
+  awaitingDraw = false;
+  awaitingJokerPlay = false;
+  showAIPlayComplete = false;
+
+  if (gameState) {
+    gameState.mode = 'single';
+    gameState.difficulty = 'normal';
+  }
+
+  selectedTileIds = new Set();
+  selectedGroupIdx = -1;
+  dragData = null;
+
+  updateControls();
+  renderAll();
+
+  if (gameState) {
+    const current = gameState.players[gameState.currentPlayerIndex];
+    if (current?.id === 'AI') {
+      isProcessing = false;
+      startTurn();
+    } else if (current?.id === 'player1') {
+      gameState.currentPlayerIndex = 1;
+      isProcessing = false;
+      startTurn();
+    }
+  }
+}
+
+document.getElementById('tutorial-skip').addEventListener('click', disableTutorialMode);
 
 // Show tutorial on page load (delayed so DOM is ready)
 setTimeout(startTutorial, 200);
