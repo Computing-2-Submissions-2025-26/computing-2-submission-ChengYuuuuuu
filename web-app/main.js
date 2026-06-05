@@ -60,7 +60,7 @@ function hideAllScreens() {
 }
 
 function setupEventListeners() {
-  document.querySelector('.mode-buttons').addEventListener('click', e => {
+  document.querySelector('.cover-buttons').addEventListener('click', e => {
     const btn = e.target.closest('button');
     if (!btn) return;
     const mode = btn.dataset.mode;

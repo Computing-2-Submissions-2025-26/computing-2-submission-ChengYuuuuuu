@@ -31,93 +31,58 @@ body {
 
 /* Start Screen */
 #start-screen {
-  text-align: center;
-  padding: 25vh 20px 0;
-}
-
-.title-block {
-  margin-bottom: 48px;
-}
-
-.main-title {
+  width: 100%;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-}
-
-.title-rummikub {
-  font-family: 'Montserrat', Impact, sans-serif;
-  font-weight: 800;
-  font-size: 6rem;
-  background: linear-gradient(135deg, #FFD700, #F39C12);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  letter-spacing: 4px;
+  background: url('assets/cover_background.png') no-repeat center center / 100% 100%;
   position: relative;
-  line-height: 1.1;
 }
 
-.star-i {
-  position: relative;
-  display: inline-block;
+#title-image {
+  margin: -2vh auto 0;
+  max-width: 45%;
+  height: auto;
+  display: block;
 }
 
-.star {
+.cover-buttons {
   position: absolute;
-  top: -0.2em;
-  left: calc(50% - 10px);
-  transform: translateX(-50%) rotate(0deg);
-  font-size: 0.54em;
-  color: #FFD700;
-  -webkit-text-fill-color: #FFD700;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
-  animation: starSpin 4s linear infinite;
-  pointer-events: none;
-}
-
-@keyframes starSpin {
-  from { transform: translateX(-50%) rotate(0deg); }
-  to { transform: translateX(-50%) rotate(360deg); }
-}
-
-.title-duo {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-style: italic;
-  font-size: 2.8rem;
-  color: #89CFF0;
-  margin-top: -8px;
-}
-
-.subtitle {
-  font-size: 1.1rem;
-  color: #888;
-  margin-top: 12px;
-  text-align: center;
-}
-
-.mode-buttons {
+  bottom: 14vh;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  gap: 16px;
-  justify-content: center;
-  flex-wrap: wrap;
+  flex-direction: row;
+  align-items: center;
+  gap: 24px;
 }
 
-.mode-buttons button {
-  padding: 16px 32px;
-  font-size: 1.1rem;
-  border: 2px solid #f39c12;
-  background: transparent;
-  color: #f39c12;
-  border-radius: 8px;
+.cover-btn {
+  width: 320px;
+  height: 68px;
+  background: url('assets/button.png') no-repeat center center / 100% 100%;
+  border: none;
   cursor: pointer;
-  transition: all 0.2s;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s, filter 0.15s;
+  letter-spacing: 0.5px;
 }
 
-.mode-buttons button:hover {
-  background: #f39c12;
-  color: #1a1a2e;
+.cover-btn:hover {
+  transform: scale(1.06);
+  filter: brightness(1.15);
+}
+
+.cover-btn:active {
+  transform: scale(0.97);
 }
 
 /* Top Bar */
