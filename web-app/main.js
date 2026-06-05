@@ -18,6 +18,8 @@ let awaitingInitialMeld = false;
 let showAIPlayComplete = false;
 let awaitingDraw = false;
 let awaitingJokerPlay = false;
+let isAnimatingDraw = false;
+let _justDrewTileId = null;
 
 const bgm = document.getElementById('bgm');
 bgm.volume = 0.5;
@@ -77,6 +79,7 @@ function setupEventListeners() {
   document.getElementById('submit-btn').addEventListener('click', submitTurn);
   document.getElementById('cancel-btn').addEventListener('click', cancelTurn);
   document.getElementById('draw-btn').addEventListener('click', drawAndSkip);
+  document.getElementById('draw-pile').addEventListener('click', drawAndSkip);
 
   document.getElementById('board-groups').addEventListener('click', e => {
     const groupEl = e.target.closest('.board-group');
@@ -795,12 +798,15 @@ function cancelTurn() {
 }
 
 function drawAndSkip() {
-  if (isProcessing) return;
+  if (isProcessing || isAnimatingDraw) return;
 
   if (originalRackIds && originalRackIds.length > pendingRack.length) {
     showMessage('You have pending plays. Cancel or submit first.', 'error');
     return;
   }
+
+  const pile = document.getElementById('draw-pile');
+  if (pile.classList.contains('disabled')) return;
 
   if (isTutorialMode && tutorialGameStep === 3) {
     const state = JSON.parse(JSON.stringify(gameState));
@@ -833,44 +839,107 @@ function drawAndSkip() {
     return;
   }
 
-  const result = skipAndDraw(gameState);
-  gameState = result.newState;
-  pendingRack = null;
-  pendingBoard = null;
-  originalRackIds = null;
-  selectedTileIds = new Set();
-  selectedGroupIdx = -1;
+  animateDraw(() => {
+    const prevRackLen = gameState.players[0].rack.length;
+    const result = skipAndDraw(gameState);
+    gameState = result.newState;
+    pendingRack = null;
+    pendingBoard = null;
+    originalRackIds = null;
+    selectedTileIds = new Set();
+    selectedGroupIdx = -1;
 
-  if (!result.drawnTile) {
-    consecutiveEmptySkips++;
-    if (consecutiveEmptySkips >= gameState.players.length) {
-      const scores = gameState.players.map(p => ({
-        id: p.id,
-        score: p.rack.reduce((s, t) => s + (t.isJoker ? 30 : t.value), 0)
-      }));
-      scores.sort((a, b) => a.score - b.score);
-      showMessage(`Pool empty - ${scores[0].id} wins with ${scores[0].score} points!`, 'success');
-      setTimeout(() => showGameOver(scores[0].id), 1500);
+    if (result.drawnTile) {
+      _justDrewTileId = result.drawnTile.id;
+    }
+
+    if (!result.drawnTile) {
+      consecutiveEmptySkips++;
+      if (consecutiveEmptySkips >= gameState.players.length) {
+        const scores = gameState.players.map(p => ({
+          id: p.id,
+          score: p.rack.reduce((s, t) => s + (t.isJoker ? 30 : t.value), 0)
+        }));
+        scores.sort((a, b) => a.score - b.score);
+        showMessage(`Pool empty - ${scores[0].id} wins with ${scores[0].score} points!`, 'success');
+        setTimeout(() => showGameOver(scores[0].id), 1500);
+        return;
+      }
+      showMessage(`Pool is empty, skipped (${consecutiveEmptySkips}/${gameState.players.length})`, 'info');
+    } else {
+      consecutiveEmptySkips = 0;
+      showMessage('Drew a tile and skipped', 'info');
+    }
+
+    const winner = checkWin(gameState);
+    if (winner) {
+      showGameOver(winner);
       return;
     }
-    showMessage(`Pool is empty, skipped (${consecutiveEmptySkips}/${gameState.players.length})`, 'info');
-  } else {
-    consecutiveEmptySkips = 0;
-    showMessage('Drew a tile and skipped', 'info');
-  }
 
-  const winner = checkWin(gameState);
-  if (winner) {
-    showGameOver(winner);
-    return;
-  }
+    renderAll();
+    try {
+      handleTurnTransition();
+    } catch (_) {
+      setTimeout(startTurn, 100);
+    }
+  });
+}
 
-  renderAll();
-  try {
-    handleTurnTransition();
-  } catch (_) {
-    setTimeout(startTurn, 100);
-  }
+function animateDraw(callback) {
+  if (isAnimatingDraw) return;
+  isAnimatingDraw = true;
+
+  const pile = document.getElementById('draw-pile');
+  const rackTiles = document.getElementById('rack-tiles');
+  const pileRect = pile.getBoundingClientRect();
+  const rackRect = rackTiles.getBoundingClientRect();
+
+  const startX = pileRect.left + pileRect.width / 2 - 24;
+  const startY = pileRect.top + pileRect.height / 2 - 32;
+  const endX = rackRect.right - 48;
+  const endY = rackRect.top + rackRect.height / 2 - 32;
+
+  const flyCard = document.createElement('div');
+  flyCard.className = 'flying-card';
+  flyCard.style.left = startX + 'px';
+  flyCard.style.top = startY + 'px';
+  document.body.appendChild(flyCard);
+
+  const dx = endX - startX;
+  const dy = endY - startY;
+
+  // Pulse on draw pile
+  pile.style.transition = 'transform 0.15s';
+  pile.style.transform = 'scale(0.95)';
+  setTimeout(() => {
+    pile.style.transform = 'scale(1.05)';
+  }, 100);
+  setTimeout(() => {
+    pile.style.transform = '';
+  }, 250);
+
+  const flyAnim = flyCard.animate([
+    { transform: 'translate(0, 0) rotateY(0deg)', offset: 0 },
+    { transform: `translate(${dx * 0.4}px, ${dy * 0.3}px) rotateY(90deg)`, offset: 0.4 },
+    { transform: `translate(${dx * 0.8}px, ${dy * 0.6}px) rotateY(135deg)`, offset: 0.7 },
+    { transform: `translate(${dx}px, ${dy}px) rotateY(180deg)`, offset: 1 }
+  ], {
+    duration: 500,
+    easing: 'ease-in-out',
+    fill: 'forwards'
+  });
+
+  flyCard.addEventListener('animationend', () => {
+    flyCard.remove();
+    // fallback: also remove on finish
+  });
+
+  flyAnim.onfinish = () => {
+    flyCard.remove();
+    isAnimatingDraw = false;
+    callback();
+  };
 }
 
 function showGameOver(winnerId) {
@@ -976,6 +1045,17 @@ function renderGameInfo() {
   }
 
   document.getElementById('pool-info').textContent = `Pool: ${gameState.pool.length}`;
+
+  const pileCount = document.getElementById('pile-count');
+  const drawPile = document.getElementById('draw-pile');
+  if (pileCount) pileCount.textContent = `${gameState.pool.length}`;
+  if (drawPile) {
+    if (gameState.pool.length === 0) {
+      drawPile.classList.add('disabled', 'empty');
+    } else {
+      drawPile.classList.remove('disabled', 'empty');
+    }
+  }
 }
 
 function renderBoard() {
@@ -1036,12 +1116,16 @@ function renderRack() {
       committed: false,
       id: tile.id,
     });
+    if (_justDrewTileId !== null && tile.id === _justDrewTileId) {
+      el.classList.add('tile-new');
+    }
     container.appendChild(el);
   });
 
   if (rack.length === 0) {
     container.innerHTML = '<div class="board-empty" style="padding:10px">No tiles</div>';
   }
+  _justDrewTileId = null;
 }
 
 function renderPending() {
@@ -1098,9 +1182,18 @@ function createTileElement(tile, opts = {}) {
 
 function updateControls() {
   const hasPending = pendingRack && originalRackIds && (originalRackIds.length > pendingRack.length);
+  const drawDisabled = isProcessing || awaitingInitialMeld || awaitingJokerPlay;
   document.getElementById('submit-btn').disabled = !hasPending || isProcessing || awaitingDraw;
   document.getElementById('cancel-btn').disabled = !hasPending || isProcessing || awaitingDraw;
-  document.getElementById('draw-btn').disabled = isProcessing || awaitingInitialMeld || awaitingJokerPlay;
+  document.getElementById('draw-btn').disabled = drawDisabled;
+  const drawPile = document.getElementById('draw-pile');
+  if (drawPile) {
+    if (drawDisabled || gameState.pool.length === 0) {
+      drawPile.classList.add('disabled');
+    } else {
+      drawPile.classList.remove('disabled');
+    }
+  }
 }
 
 // --- Tutorial ---

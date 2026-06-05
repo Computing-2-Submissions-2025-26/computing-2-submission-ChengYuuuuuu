@@ -188,6 +188,22 @@ body {
   color: #eee;
 }
 
+/* Middle area: board + rack on left, draw pile on right */
+#game-middle {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  gap: 0;
+}
+
+#game-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 6px;
+}
+
 /* Board Area */
 #board-area {
   background: #16213e;
@@ -418,6 +434,106 @@ body {
 #message-area.info {
   background: rgba(52,152,219,0.15);
   color: #3498db;
+}
+
+/* Draw Pile */
+#draw-pile-container {
+  width: 100px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+#draw-pile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.15s;
+  user-select: none;
+}
+
+#draw-pile:hover {
+  transform: scale(1.05);
+}
+
+#draw-pile:active {
+  transform: scale(0.95);
+}
+
+#draw-pile.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+#draw-pile.disabled:hover {
+  transform: none;
+}
+
+.pile-stack {
+  position: relative;
+  width: 48px;
+  height: 74px;
+}
+
+.pile-card {
+  position: absolute;
+  width: 48px;
+  height: 64px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #2d5a27 0%, #4a8b3f 25%, #2d5a27 50%, #4a8b3f 75%, #2d5a27 100%);
+  border: 2px solid #c9a84c;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.pile-card:nth-child(1) { z-index: 5; top: 0; left: 0; }
+.pile-card:nth-child(2) { z-index: 4; top: 2px; left: 2px; }
+.pile-card:nth-child(3) { z-index: 3; top: 4px; left: 4px; }
+.pile-card:nth-child(4) { z-index: 2; top: 6px; left: 6px; }
+.pile-card:nth-child(5) { z-index: 1; top: 8px; left: 8px; }
+
+#pile-count {
+  margin-top: 10px;
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  padding: 2px 10px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  min-width: 30px;
+  text-align: center;
+}
+
+#draw-pile.empty #pile-count::after {
+  content: 'No tiles';
+  display: block;
+  font-size: 0.7rem;
+  margin-top: 2px;
+}
+
+/* Flying card animation */
+.flying-card {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+  width: 48px;
+  height: 64px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #2d5a27 0%, #4a8b3f 25%, #2d5a27 50%, #4a8b3f 75%, #2d5a27 100%);
+  border: 2px solid #c9a84c;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.tile.tile-new {
+  animation: cardFadeIn 0.3s ease-out;
+}
+
+@keyframes cardFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Game Over */
