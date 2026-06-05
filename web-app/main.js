@@ -765,21 +765,30 @@ function handleTurnTransition() {
     passOverlay.style.textAlign = 'center';
     const label = nextPlayer.id === 'player1' ? 'Player 1' : 'Player 2';
     passOverlay.innerHTML = `
-      <button id="pass-btn" style="margin:10px auto;padding:14px 40px;font-size:1.2rem;border-color:#f39c12;color:#f39c12;background:transparent;border-radius:8px;cursor:pointer">
-        Pass to ${label}
+      <button id="pass-btn" style="margin:10px auto;padding:12px 32px;font-family:'Press Start 2P',monospace;font-size:0.65rem;text-transform:uppercase;border:2px solid #f39c12;color:#f39c12;background:#222;cursor:pointer;box-shadow:3px 3px 0 rgba(0,0,0,0.5);letter-spacing:1px">
+        PASS TO ${label}
       </button>`;
-    document.getElementById('game-screen').appendChild(passOverlay);
+    const bottomBar = document.getElementById('bottom-bar');
+    if (bottomBar) {
+      bottomBar.parentNode.insertBefore(passOverlay, bottomBar);
+    } else {
+      document.getElementById('game-screen').appendChild(passOverlay);
+    }
 
     document.getElementById('pass-btn').addEventListener('click', () => {
       startTurn();
     });
     document.getElementById('pass-btn').addEventListener('mouseover', function() {
       this.style.background = '#f39c12';
-      this.style.color = '#1a1a2e';
+      this.style.color = '#222';
+      this.style.transform = 'translateY(-1px)';
+      this.style.boxShadow = '4px 4px 0 rgba(0,0,0,0.5)';
     });
     document.getElementById('pass-btn').addEventListener('mouseout', function() {
-      this.style.background = 'transparent';
+      this.style.background = '#222';
       this.style.color = '#f39c12';
+      this.style.transform = '';
+      this.style.boxShadow = '3px 3px 0 rgba(0,0,0,0.5)';
     });
   }
 }
@@ -909,15 +918,15 @@ function animateDraw(callback) {
   const dx = endX - startX;
   const dy = endY - startY;
 
-  // Pulse on draw pile
-  pile.style.transition = 'transform 0.15s';
+  pile.style.transition = 'none';
   pile.style.transform = 'scale(0.95)';
-  setTimeout(() => {
+  requestAnimationFrame(() => {
+    pile.style.transition = 'transform 0.08s steps(4)';
     pile.style.transform = 'scale(1.05)';
-  }, 100);
+  });
   setTimeout(() => {
-    pile.style.transform = '';
-  }, 250);
+    pile.style.transform = 'scale(1)';
+  }, 200);
 
   const flyAnim = flyCard.animate([
     { transform: 'translate(0, 0) rotateY(0deg)', offset: 0 },
@@ -926,7 +935,7 @@ function animateDraw(callback) {
     { transform: `translate(${dx}px, ${dy}px) rotateY(180deg)`, offset: 1 }
   ], {
     duration: 500,
-    easing: 'ease-in-out',
+    easing: 'steps(8)',
     fill: 'forwards'
   });
 
@@ -942,12 +951,33 @@ function animateDraw(callback) {
   };
 }
 
+function showPixelConfetti() {
+  const colors = ['#e74c3c', '#3498db', '#f1c40f', '#2ecc71', '#9b59b6', '#e67e22'];
+  for (let i = 0; i < 60; i++) {
+    const el = document.createElement('div');
+    el.className = 'pixel-confetti';
+    el.style.left = Math.random() * 100 + 'vw';
+    el.style.top = '-10px';
+    el.style.background = colors[i % colors.length];
+    el.style.width = (4 + Math.random() * 4) + 'px';
+    el.style.height = (4 + Math.random() * 4) + 'px';
+    document.body.appendChild(el);
+    const delay = Math.random() * 1000;
+    const duration = 1500 + Math.random() * 1500;
+    el.animate([
+      { transform: `translate(0, 0) rotate(0deg)`, opacity: 1 },
+      { transform: `translate(${(-100 + Math.random() * 200)}px, ${300 + Math.random() * 400}px) rotate(${Math.random() * 720}deg)`, opacity: 0 }
+    ], { duration, delay, easing: 'steps(20)', fill: 'forwards' }).onfinish = () => el.remove();
+  }
+}
+
 function showGameOver(winnerId) {
   stopMusic();
   hideAllScreens();
   document.getElementById('gameover-screen').style.display = 'flex';
   const label = winnerId === 'player1' ? 'Player 1' : (winnerId === 'player2' ? 'Player 2' : 'AI');
-  document.getElementById('winner-text').textContent = `${label} wins!`;
+  document.getElementById('winner-text').textContent = `${label} WINS!`;
+  showPixelConfetti();
 }
 
 function showThawAnimation() {
@@ -969,7 +999,7 @@ function updateFrozenState() {
   if (frozen && !container) {
     container = document.createElement('div');
     container.className = 'frozen-snowflakes';
-    container.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden;border-radius:8px';
+    container.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden';
     const count = 20;
     for (let i = 0; i < count; i++) {
       const flake = document.createElement('span');
@@ -985,9 +1015,24 @@ function updateFrozenState() {
   if (!frozen && container) container.remove();
 }
 
+function renderAIHand() {
+  const container = document.getElementById('ai-hand');
+  if (!container || !gameState) return;
+  container.innerHTML = '';
+  const aiPlayer = gameState.players[1];
+  if (!aiPlayer) return;
+  const count = aiPlayer.rack.length;
+  for (let i = 0; i < count; i++) {
+    const tile = document.createElement('div');
+    tile.className = 'ai-hand-tile';
+    container.appendChild(tile);
+  }
+}
+
 function renderAll() {
   try { updateFrozenState(); } catch (e) { console.error('updateFrozenState error:', e); }
   try { renderGameInfo(); } catch (e) { console.error('renderGameInfo error:', e); }
+  try { renderAIHand(); } catch (e) { console.error('renderAIHand error:', e); }
   try { renderBoard(); } catch (e) { console.error('renderBoard error:', e); }
   try { renderRack(); } catch (e) { console.error('renderRack error:', e); }
   try { renderPending(); } catch (e) { console.error('renderPending error:', e); }
@@ -1003,7 +1048,7 @@ function renderGameInfo() {
     const infoEl = document.getElementById(i === 0 ? 'player1-info' : 'player2-info');
     const countEl = document.getElementById(i === 0 ? 'count-p1' : 'count-p2');
     const avatarEl = document.getElementById(i === 0 ? 'avatar-p1' : 'avatar-p2');
-    if (countEl) countEl.textContent = `${p.rack.length}`;
+    if (countEl) countEl.textContent = `×${p.rack.length}`;
     if (infoEl) {
       const isCurrent = p.id === current?.id;
       infoEl.style.opacity = isCurrent ? '1' : '0.5';
