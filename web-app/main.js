@@ -326,7 +326,7 @@ function startTutorialGame() {
     { id: 3, color: 'yellow', value: 11, isJoker: false },
     { id: 4, color: 'black', value: 7, isJoker: false },
     { id: 5, color: 'black', value: 8, isJoker: false },
-    { id: 6, color: 'black', value: 13, isJoker: false },
+    { id: 6, color: 'blue', value: 13, isJoker: false },
     { id: 7, color: 'red', value: 4, isJoker: false },
     { id: 8, color: 'blue', value: 9, isJoker: false },
     { id: 9, color: 'yellow', value: 2, isJoker: false },
@@ -983,6 +983,8 @@ function renderBoard() {
   const isAiTurn = isProcessing && gameState.players[gameState.currentPlayerIndex]?.id === 'AI';
   const displayGroups = pendingBoard !== null ? pendingBoard : gameState.board;
   container.innerHTML = '';
+
+  container.style.minHeight = '200px';
 
   if (!displayGroups || displayGroups.length === 0) {
     container.innerHTML = '<div class="board-empty">No tiles on the board yet</div>';
