@@ -256,7 +256,7 @@ body {
 #board-groups {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 0;
   align-items: flex-start;
   align-content: flex-start;
   min-height: 100%;
@@ -388,10 +388,7 @@ body {
 .tile.yellow { background: url('assets/tile_yellow.png') no-repeat center / 100% 100%; }
 .tile.black { background: url('assets/tile_white.png') no-repeat center / 100% 100%; }
 
-.board-group .tile {
-  width: 84px;
-  height: 110px;
-}
+
 
 .tile.yellow .tile-value {
   color: #1a1a2e;
@@ -765,43 +762,29 @@ body {
 }
 
 .tutorial-tile {
-  width: 22px;
-  height: 30px;
+  width: 28px;
+  height: 37px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 0.5rem;
+  font-size: 0.6rem;
   font-family: 'Silkscreen', monospace;
-  border: 1px solid rgba(0,0,0,0.3);
+  border: 1px solid rgba(0,0,0,0.15);
   flex-shrink: 0;
-}
-
-.tutorial-tile.red { background: #c0392b; color: #fff; }
-.tutorial-tile.blue { background: #2980b9; color: #fff; }
-.tutorial-tile.yellow { background: #f1c40f; color: #1a1a2e; }
-.tutorial-tile.black { background: #2c3e50; color: #fff; }
-.tutorial-tile.joker {
-  background: linear-gradient(90deg,
-    #ff0000 0% 16.66%,
-    #ff8800 16.66% 33.33%,
-    #ffff00 33.33% 50%,
-    #00cc00 50% 66.66%,
-    #0066ff 66.66% 83.33%,
-    #8800ff 83.33% 100%
-  );
   color: #fff;
-  opacity: 0.2;
-  filter: grayscale(1);
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
   position: relative;
 }
 
-.tutorial-tile.joker::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.3);
-  pointer-events: none;
+.tutorial-tile.red { background: url('assets/tile_red.png') no-repeat center / 100% 100%; }
+.tutorial-tile.blue { background: url('assets/tile_blue.png') no-repeat center / 100% 100%; }
+.tutorial-tile.yellow { background: url('assets/tile_yellow.png') no-repeat center / 100% 100%; }
+.tutorial-tile.black { background: url('assets/tile_white.png') no-repeat center / 100% 100%; color: #1a1a2e; text-shadow: none; }
+.tutorial-tile.joker {
+  background: url('assets/tile_joker.png') no-repeat center / 100% 100%;
+  opacity: 0.2;
+  filter: grayscale(1);
 }
 
 #tutorial-tile-grid.joker-focus .tutorial-tile:not(.joker) {
@@ -812,10 +795,6 @@ body {
 #tutorial-tile-grid.joker-focus .tutorial-tile.joker {
   opacity: 1;
   filter: none;
-}
-
-#tutorial-tile-grid.joker-focus .tutorial-tile.joker::after {
-  display: none;
 }
 
 #tutorial-overlay.has-spotlight {
