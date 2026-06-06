@@ -989,30 +989,9 @@ function showThawAnimation() {
 }
 
 function updateFrozenState() {
-  const area = document.getElementById('board-area');
+  const screen = document.getElementById('game-screen');
   const human = gameState.players[0];
-  const frozen = human && !human.hasMelded;
-
-  area.classList.toggle('frozen', frozen);
-
-  let container = area.querySelector('.frozen-snowflakes');
-  if (frozen && !container) {
-    container = document.createElement('div');
-    container.className = 'frozen-snowflakes';
-    container.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden';
-    const count = 20;
-    for (let i = 0; i < count; i++) {
-      const flake = document.createElement('span');
-      flake.className = 'frozen-snowflake';
-      const size = 8 + Math.random() * 16;
-      flake.textContent = '❄';
-      flake.style.cssText = `font-size:${size}px;left:${Math.random()*100}%;top:${Math.random()*100}%;opacity:0.2`;
-      container.appendChild(flake);
-    }
-    area.appendChild(container);
-  }
-
-  if (!frozen && container) container.remove();
+  screen.classList.toggle('frozen', human && !human.hasMelded);
 }
 
 function renderAIHand() {

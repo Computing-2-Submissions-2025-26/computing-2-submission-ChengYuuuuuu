@@ -104,7 +104,6 @@ body {
   gap: 8px;
   flex-shrink: 0;
   padding: 2px 8px;
-  background: rgba(0,0,0,0.25);
   border: 1px solid rgba(255,255,255,0.06);
 }
 
@@ -115,7 +114,6 @@ body {
   padding: 2px 8px;
   border: 1px solid transparent;
   transition: all 0.15s;
-  background: rgba(0,0,0,0.15);
 }
 
 .avatar {
@@ -151,7 +149,6 @@ body {
   color: #ffd700;
   text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
   padding: 2px 6px;
-  background: rgba(0,0,0,0.3);
   border: 1px solid rgba(255,215,0,0.3);
 }
 
@@ -184,7 +181,6 @@ body {
 #meld-status {
   font-size: 0.75rem;
   padding: 2px 8px;
-  background: rgba(0,0,0,0.3);
   border: 1px solid rgba(243,156,18,0.4);
   color: #f39c12;
 }
@@ -194,7 +190,6 @@ body {
   font-size: 0.75rem;
   color: #aaa;
   padding: 2px 6px;
-  background: rgba(0,0,0,0.3);
   border: 1px solid rgba(255,255,255,0.1);
 }
 
@@ -254,22 +249,8 @@ body {
   position: relative;
 }
 
-#board-area.frozen::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(173,216,230,0.12);
-  pointer-events: none;
-  z-index: 1;
-}
-
-.frozen-snowflake {
-  position: absolute;
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.2;
-  user-select: none;
-  font-size: 12px;
+#game-screen.frozen {
+  background: url('assets/frozen_background.png') no-repeat center / cover;
 }
 
 #board-groups {
@@ -337,8 +318,8 @@ body {
 }
 
 .ai-hand-tile {
-  width: 34px;
-  height: 45px;
+  width: 41px;
+  height: 54px;
   background: url('assets/tile_back.png') no-repeat center / 100% 100%;
   border: 1px solid rgba(0,0,0,0.15);
   flex-shrink: 0;
@@ -363,8 +344,8 @@ body {
 
 /* ===== Tiles - Pixel Style ===== */
 .tile {
-  width: 70px;
-  height: 92px;
+  width: 63px;
+  height: 83px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -407,6 +388,11 @@ body {
 .tile.yellow { background: url('assets/tile_yellow.png') no-repeat center / 100% 100%; }
 .tile.black { background: url('assets/tile_white.png') no-repeat center / 100% 100%; }
 
+.board-group .tile {
+  width: 84px;
+  height: 110px;
+}
+
 .tile.yellow .tile-value {
   color: #1a1a2e;
 }
@@ -429,12 +415,11 @@ body {
   font-weight: bold;
   position: absolute;
   bottom: 3px;
-  background: rgba(0,0,0,0.5);
   padding: 2px 6px;
   color: #fff;
   letter-spacing: 0.5px;
   z-index: 2;
-  text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
+  transform: translateX(-4px);
 }
 
 .tile.in-rack {
@@ -956,7 +941,7 @@ body {
   transform: translateY(-1px);
 }
 
-#tutorial-skip {
+#tutorial-skip { display: none; 
   position: absolute;
   top: 10px;
   right: 12px;
