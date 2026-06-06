@@ -1214,9 +1214,9 @@ function createTileElement(tile, opts = {}) {
     const repr = opts.jokerRepr;
     if (repr) {
       const colorLabel = COLOR_LABELS[repr.color] || repr.color[0].toUpperCase();
-      div.innerHTML = `<span class="tile-value">★</span><span class="tile-sub">${colorLabel}${repr.value}</span>`;
+      div.innerHTML = `<span class="tile-value"></span><span class="tile-sub">${colorLabel}${repr.value}</span>`;
     } else {
-      div.innerHTML = '<span class="tile-value">★</span>';
+      div.innerHTML = '<span class="tile-value"></span>';
     }
   } else {
     div.innerHTML = `<span class="tile-value">${tile.value}</span>`;
@@ -1327,12 +1327,12 @@ function showTutorialStep() {
     jokerRow.className = 'tutorial-tile-row';
     const jokerLabel = document.createElement('span');
     jokerLabel.className = 'tutorial-tile-label';
-    jokerLabel.textContent = '★';
+    jokerLabel.textContent = '?';
     jokerRow.appendChild(jokerLabel);
     for (let i = 0; i < 2; i++) {
       const tile = document.createElement('div');
       tile.className = 'tutorial-tile joker';
-      tile.textContent = '★';
+      tile.textContent = '?';
       jokerRow.appendChild(tile);
     }
     grid.appendChild(jokerRow);

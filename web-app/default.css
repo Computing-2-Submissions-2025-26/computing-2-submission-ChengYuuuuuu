@@ -2,11 +2,7 @@
 
 body {
   font-family: 'VT323', 'Courier New', monospace;
-  background-color: #1a3a1a;
-  background-image:
-    linear-gradient(rgba(0,0,0,0.12) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,0,0,0.12) 1px, transparent 1px);
-  background-size: 8px 8px;
+  background: #1a1a2e;
   color: #eee;
   height: 100vh;
   overflow: hidden;
@@ -30,13 +26,10 @@ body {
   height: 100vh;
   width: 100%;
   padding: 6px 8px;
-  gap: 5px;
+  gap: 4px;
   overflow: hidden;
   position: relative;
-  border: 6px solid #8B4513;
-  box-shadow:
-    inset 0 0 0 2px #5C3317,
-    0 0 0 3px #3e2710;
+  background: url('assets/game_background.png') no-repeat center / cover;
 }
 
 /* ===== Start Screen (pixel-ified) ===== */
@@ -96,58 +89,33 @@ body {
   transform: scale(0.97);
 }
 
-/* ===== Top Bar - Pixel Wooden Scroll ===== */
-#top-bar {
+#ai-info {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 6px 10px;
-  background: linear-gradient(180deg,
-    #8B4513 0%, #8B4513 30%,
-    #A0522D 30%, #A0522D 50%,
-    #8B4513 50%, #8B4513 70%,
-    #A0522D 70%, #A0522D 100%
-  );
-  border: 2px solid #5C3317;
-  box-shadow:
-    3px 3px 0 rgba(0,0,0,0.4),
-    inset 0 1px 0 rgba(255,255,255,0.15);
+  justify-content: center;
   flex-shrink: 0;
-  gap: 6px;
-  position: relative;
+  padding: 2px 0;
 }
 
-#top-bar::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg,
-    transparent, rgba(255,255,255,0.08), transparent
-  );
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-}
-
-#top-left {
+#game-info-bar {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 8px;
   flex-shrink: 0;
-  min-width: 0;
+  padding: 2px 8px;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.06);
 }
 
 .player-info {
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 8px;
-  border: 2px solid transparent;
+  padding: 2px 8px;
+  border: 1px solid transparent;
   transition: all 0.15s;
-  background: rgba(0,0,0,0.25);
-  box-shadow: inset 1px 1px 0 rgba(0,0,0,0.3);
+  background: rgba(0,0,0,0.15);
 }
 
 .avatar {
@@ -174,15 +142,6 @@ body {
 
 .player-info::after {
   display: none;
-}
-
-#center-info {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-  min-width: 0;
 }
 
 #turn-indicator {
@@ -280,15 +239,11 @@ body {
   min-height: 0;
 }
 
-/* ===== Board Area - Pixel Grid Desktop ===== */
+/* ===== Board Area ===== */
 #board-area {
-  background-color: #1a4a1a;
-  background-image:
-    linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px);
-  background-size: 8px 8px;
-  border: 2px solid #2a5a2a;
-  box-shadow: inset 2px 2px 0 rgba(0,0,0,0.3);
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: inset 2px 2px 0 rgba(0,0,0,0.15);
   padding: 10px;
   flex: 1 1 auto;
   min-height: 0;
@@ -331,13 +286,14 @@ body {
 
 .board-group {
   display: flex;
-  gap: 3px;
+  gap: 0;
   padding: 6px 8px;
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.2);
   cursor: pointer;
   transition: border-color 0.1s;
   box-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+  overflow: visible;
 }
 
 .board-group.selected {
@@ -383,14 +339,8 @@ body {
 .ai-hand-tile {
   width: 34px;
   height: 45px;
-  background:
-    linear-gradient(45deg,
-      #2d5a27 25%, #4a8b3f 25%, #4a8b3f 50%,
-      #2d5a27 50%, #2d5a27 75%, #4a8b3f 75%
-    );
-  background-size: 5px 5px;
-  border: 1.5px solid #c9a84c;
-  box-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+  background: url('assets/tile_back.png') no-repeat center / 100% 100%;
+  border: 1px solid rgba(0,0,0,0.15);
   flex-shrink: 0;
 }
 
@@ -398,56 +348,42 @@ body {
 #rack-area {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .tile-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 0;
   min-height: 52px;
   align-items: flex-start;
   justify-content: center;
+  padding-top: 12px;
 }
 
 /* ===== Tiles - Pixel Style ===== */
 .tile {
-  width: 48px;
-  height: 64px;
+  width: 70px;
+  height: 92px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
   cursor: grab;
   user-select: none;
-  transition: transform 0.08s, box-shadow 0.08s, opacity 0.08s;
-  border: 1px solid #000;
-  box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+  transition: transform 0.08s, opacity 0.08s;
   position: relative;
   background: #f5f0e1;
 }
 
-.tile::before {
-  content: '';
-  position: absolute;
-  width: 3px;
-  height: 3px;
-  top: 3px;
-  left: 3px;
-  background: rgba(0,0,0,0.13);
-  box-shadow:
-    40px 0 0 rgba(0,0,0,0.13),
-    0 56px 0 rgba(0,0,0,0.13),
-    40px 56px 0 rgba(0,0,0,0.13);
-  pointer-events: none;
-}
-
 .tile .tile-value {
   font-family: 'Silkscreen', 'Courier New', monospace;
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   line-height: 1;
-  z-index: 1;
-  text-shadow: 1px 1px 0 rgba(0,0,0,0.15);
+  z-index: 2;
+  color: #fff;
+  pointer-events: none;
+  transform: translateX(-4px);
 }
 
 .tile:hover {
@@ -457,7 +393,8 @@ body {
 
 .tile.selected {
   transform: translateY(-10px);
-  box-shadow: 3px 3px 0 rgba(0,0,0,0.3);
+  position: relative;
+  z-index: 10;
 }
 
 .tile.committed {
@@ -465,45 +402,39 @@ body {
   pointer-events: none;
 }
 
-.tile.red { background: #c0392b; }
-.tile.red .tile-value { color: #fff; }
-.tile.blue { background: #2980b9; }
-.tile.blue .tile-value { color: #fff; }
-.tile.yellow { background: #f1c40f; }
-.tile.yellow .tile-value { color: #1a1a2e; }
-.tile.black { background: #2c3e50; }
-.tile.black .tile-value { color: #fff; }
+.tile.red { background: url('assets/tile_red.png') no-repeat center / 100% 100%; }
+.tile.blue { background: url('assets/tile_blue.png') no-repeat center / 100% 100%; }
+.tile.yellow { background: url('assets/tile_yellow.png') no-repeat center / 100% 100%; }
+.tile.black { background: url('assets/tile_white.png') no-repeat center / 100% 100%; }
 
-.tile.joker {
-  background: linear-gradient(90deg,
-    #ff0000 0% 16.66%,
-    #ff8800 16.66% 33.33%,
-    #ffff00 33.33% 50%,
-    #00cc00 50% 66.66%,
-    #0066ff 66.66% 83.33%,
-    #8800ff 83.33% 100%
-  );
-  position: relative;
-  overflow: hidden;
+.tile.yellow .tile-value {
+  color: #1a1a2e;
+}
+
+.tile.black .tile-value {
+  color: #1a1a2e;
 }
 
 .tile.joker .tile-value {
-  font-size: 1.6rem;
-  color: #fff;
-  text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+  display: none;
+}
+
+.tile.joker {
+  background: url('assets/tile_joker.png') no-repeat center / 100% 100%;
 }
 
 .tile.joker .tile-sub {
   font-family: 'VT323', monospace;
-  font-size: 0.5rem;
+  font-size: 0.7rem;
   font-weight: bold;
   position: absolute;
-  bottom: 2px;
-  background: rgba(0,0,0,0.45);
-  padding: 1px 4px;
+  bottom: 3px;
+  background: rgba(0,0,0,0.5);
+  padding: 2px 6px;
   color: #fff;
   letter-spacing: 0.5px;
-  z-index: 1;
+  z-index: 2;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
 }
 
 .tile.in-rack {
@@ -532,66 +463,35 @@ body {
 
 #controls button {
   padding: 8px 16px;
-  border: 2px solid #555;
-  background: #444;
-  color: #ccc;
+  border: none;
+  background: url('assets/board.png') no-repeat center / 100% 100%;
+  color: #fff;
   cursor: pointer;
   font-family: 'Press Start 2P', monospace;
   font-size: 0.55rem;
   text-transform: uppercase;
-  transition: transform 0.08s, box-shadow 0.08s, background 0.08s, color 0.08s;
-  box-shadow: 3px 3px 0 rgba(0,0,0,0.4);
+  transition: transform 0.08s, box-shadow 0.08s, filter 0.08s;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.4);
   letter-spacing: 0.5px;
   position: relative;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
 }
 
 #controls button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 4px 4px 0 rgba(0,0,0,0.4);
+  transform: translateY(-2px);
+  filter: brightness(1.15);
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.4);
 }
 
 #controls button:active:not(:disabled) {
-  transform: translateY(1px);
-  box-shadow: 2px 2px 0 rgba(0,0,0,0.4);
+  transform: translateY(0);
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.4);
 }
 
 #controls button:disabled {
   opacity: 0.35;
   cursor: not-allowed;
   box-shadow: 1px 1px 0 rgba(0,0,0,0.2);
-}
-
-#submit-btn {
-  background: #c0392b;
-  border-color: #f39c12;
-  color: #f39c12;
-}
-#submit-btn:hover:not(:disabled) {
-  background: #f39c12;
-  border-color: #c0392b;
-  color: #c0392b;
-}
-
-#cancel-btn {
-  background: #555;
-  border-color: #ccc;
-  color: #ccc;
-}
-#cancel-btn:hover:not(:disabled) {
-  background: #ccc;
-  border-color: #555;
-  color: #555;
-}
-
-#draw-btn {
-  background: #27ae60;
-  border-color: #f1c40f;
-  color: #f1c40f;
-}
-#draw-btn:hover:not(:disabled) {
-  background: #f1c40f;
-  border-color: #27ae60;
-  color: #27ae60;
 }
 
 /* ===== Bottom Bar ===== */
@@ -601,8 +501,7 @@ body {
   gap: 8px;
   flex-shrink: 0;
   padding: 4px 8px 6px;
-  background: rgba(0,0,0,0.3);
-  border-top: 1px solid rgba(255,255,255,0.08);
+  background: transparent;
 }
 
 #bottom-left {
@@ -662,14 +561,9 @@ body {
   position: absolute;
   width: 48px;
   height: 64px;
-  background:
-    linear-gradient(45deg,
-      #2d5a27 25%, #4a8b3f 25%, #4a8b3f 50%,
-      #2d5a27 50%, #2d5a27 75%, #4a8b3f 75%
-    );
-  background-size: 8px 8px;
-  border: 2px solid #c9a84c;
-  box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+  background: url('assets/tile_back.png') no-repeat center / 100% 100%;
+  border: 1px solid rgba(0,0,0,0.1);
+  box-shadow: 1px 1px 0 rgba(0,0,0,0.2);
 }
 
 .pile-card:nth-child(1) { z-index: 5; top: 0; left: 0; }
@@ -702,7 +596,7 @@ body {
 /* ===== Message Area ===== */
 #message-area {
   position: absolute;
-  top: 52px;
+  top: 10px;
   left: 50%;
   transform: translateX(-50%);
   padding: 8px 18px;
@@ -730,14 +624,9 @@ body {
   pointer-events: none;
   width: 48px;
   height: 64px;
-  background:
-    linear-gradient(45deg,
-      #2d5a27 25%, #4a8b3f 25%, #4a8b3f 50%,
-      #2d5a27 50%, #2d5a27 75%, #4a8b3f 75%
-    );
-  background-size: 8px 8px;
-  border: 2px solid #c9a84c;
-  box-shadow: 3px 3px 0 rgba(0,0,0,0.4);
+  background: url('assets/tile_back.png') no-repeat center / 100% 100%;
+  border: 1px solid rgba(0,0,0,0.1);
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
 }
 
 .tile.tile-new {
