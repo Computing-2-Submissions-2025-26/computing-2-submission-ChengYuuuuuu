@@ -19,21 +19,18 @@
   </div>
 
   <div id="game-screen" style="display:none">
-    <div id="ai-info">
-      <div class="player-info" id="player2-info">
-        <div class="avatar" id="avatar-p2">CPU</div>
-        <span class="tile-count" id="count-p2">14</span>
-      </div>
+    <div id="top-buttons">
+      <button id="new-game-btn">QUIT</button>
+      <button id="music-btn">♪</button>
     </div>
 
-    <div id="ai-hand"></div>
-
-    <div id="game-info-bar">
-      <span id="turn-indicator"></span>
-      <span id="pool-info"></span>
-      <span id="meld-status"></span>
-      <button id="new-game-btn">NEW</button>
-      <button id="music-btn">♪</button>
+    <div id="ai-area">
+      <div class="player-info" id="player2-info">
+        <div class="avatar" id="avatar-p2">🧑</div>
+        <span class="player-name" id="name-p2">CPU</span>
+        <span class="tile-count" id="count-p2">×14</span>
+      </div>
+      <div id="ai-hand"></div>
     </div>
 
     <div id="game-middle">
@@ -62,14 +59,13 @@
       <button id="draw-btn" style="display:none">Draw & Skip</button>
     </div>
 
-    <div id="bottom-bar">
-      <div id="bottom-left">
-        <div class="player-info" id="player1-info">
-          <div class="avatar" id="avatar-p1">You</div>
-          <span class="tile-count" id="count-p1">14</span>
-        </div>
+    <div id="player-area">
+      <div class="player-info" id="player1-info">
+        <div class="avatar" id="avatar-p1">🧑</div>
+        <span class="player-name" id="name-p1">YOU</span>
+        <span class="tile-count" id="count-p1">×14</span>
       </div>
-      <div id="rack-area">
+      <div id="player-hand">
         <div id="rack-tiles" class="tile-row"></div>
       </div>
     </div>

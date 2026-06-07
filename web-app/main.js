@@ -768,9 +768,9 @@ function handleTurnTransition() {
       <button id="pass-btn" style="margin:10px auto;padding:12px 32px;font-family:'Press Start 2P',monospace;font-size:0.65rem;text-transform:uppercase;border:2px solid #f39c12;color:#f39c12;background:#222;cursor:pointer;box-shadow:3px 3px 0 rgba(0,0,0,0.5);letter-spacing:1px">
         PASS TO ${label}
       </button>`;
-    const bottomBar = document.getElementById('bottom-bar');
-    if (bottomBar) {
-      bottomBar.parentNode.insertBefore(passOverlay, bottomBar);
+    const playerArea = document.getElementById('player-area');
+    if (playerArea) {
+      playerArea.parentNode.insertBefore(passOverlay, playerArea);
     } else {
       document.getElementById('game-screen').appendChild(passOverlay);
     }
@@ -1030,45 +1030,50 @@ function renderGameInfo() {
     if (countEl) countEl.textContent = `×${p.rack.length}`;
     if (infoEl) {
       const isCurrent = p.id === current?.id;
+      infoEl.classList.toggle('active', isCurrent);
       infoEl.style.opacity = isCurrent ? '1' : '0.5';
-      const color = p.id === 'player1' ? '#3498db' : (p.id === 'AI' ? '#e67e22' : '#e74c3c');
-      infoEl.style.borderColor = isCurrent ? color : 'transparent';
     }
     if (avatarEl) {
       avatarEl.style.background = p.id === 'player1' ? '#3498db' : (p.id === 'AI' ? '#e67e22' : '#e74c3c');
+    }
+    const nameEl = document.getElementById(i === 0 ? 'name-p1' : 'name-p2');
+    if (nameEl) {
       if (isSingle) {
-        avatarEl.textContent = i === 0 ? 'You' : 'CPU';
+        nameEl.textContent = i === 0 ? 'YOU' : 'CPU';
       } else {
-        avatarEl.textContent = i === 0 ? 'P1' : 'P2';
+        nameEl.textContent = i === 0 ? 'P1' : 'P2';
       }
     }
   });
 
-  if (current) {
+  if (current && turnEl) {
     const label = current.id === 'player1' ? 'Player 1' : (current.id === 'player2' ? 'Player 2' : 'AI');
     turnEl.textContent = isTutorialMode ? `Tutorial - ${label}` : `Turn: ${label}`;
   }
 
   const meldEl = document.getElementById('meld-status');
-  if (isTutorialMode) {
-    const hints = {
-      1: 'Step 1/5: Drag red 11, blue 11, yellow 11 to board → Submit',
-      2: 'Step 2/5: AI plays black 10-11-12...',
-      3: 'Step 3/5: No valid play → click Draw & Skip',
-      4: 'Step 4/5: AI is drawing...',
-      5: 'Step 5/5: Drag black 7, black 8, Joker to black group!',
-    };
-    meldEl.textContent = hints[tutorialGameStep] || `Step ${tutorialGameStep}/5`;
-    meldEl.style.color = '#f39c12';
-  } else if (current && !current.hasMelded) {
-    meldEl.textContent = '⚠ Meld 30+';
-  } else if (current) {
-    meldEl.textContent = '✓ Melded';
-  } else {
-    meldEl.textContent = '';
+  if (meldEl) {
+    if (isTutorialMode) {
+      const hints = {
+        1: 'Step 1/5: Drag red 11, blue 11, yellow 11 to board → Submit',
+        2: 'Step 2/5: AI plays black 10-11-12...',
+        3: 'Step 3/5: No valid play → click Draw & Skip',
+        4: 'Step 4/5: AI is drawing...',
+        5: 'Step 5/5: Drag black 7, black 8, Joker to black group!',
+      };
+      meldEl.textContent = hints[tutorialGameStep] || `Step ${tutorialGameStep}/5`;
+      meldEl.style.color = '#f39c12';
+    } else if (current && !current.hasMelded) {
+      meldEl.textContent = '⚠ Meld 30+';
+    } else if (current) {
+      meldEl.textContent = '✓ Melded';
+    } else {
+      meldEl.textContent = '';
+    }
   }
 
-  document.getElementById('pool-info').textContent = `Pool: ${gameState.pool.length}`;
+  const poolEl = document.getElementById('pool-info');
+  if (poolEl) poolEl.textContent = `Pool: ${gameState.pool.length}`;
 
   const pileCount = document.getElementById('pile-count');
   const drawPile = document.getElementById('draw-pile');
