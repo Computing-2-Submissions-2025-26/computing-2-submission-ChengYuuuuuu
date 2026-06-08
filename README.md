@@ -142,6 +142,7 @@ npx jsdoc -c jsdoc.json
 
 ## Author
 
-<!-- Leave blank for self-fill -->
+
 Name: Chengyu Wang
+
 CID: 02586056
