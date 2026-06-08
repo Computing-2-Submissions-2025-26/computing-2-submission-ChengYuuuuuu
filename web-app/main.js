@@ -838,7 +838,7 @@ function drawAndSkip() {
       const overlay = document.getElementById('tutorial-overlay');
       overlay.classList.add('active');
       tutorialQueue = [...tutorialNo];
-      tutorialStep = 9;
+      tutorialStep = 10;
       showTutorialStep();
     }
 
@@ -1245,6 +1245,7 @@ const tutorialNo = [
   { emoji: '🤔', text: 'A valid group has at least 3 tiles. Two types: same number different colors, or same color consecutive numbers.' },
   { emoji: '🤔', text: 'After your initial meld, you can rearrange tiles on the table. Add, split, move – as long as every group stays valid.' },
   { emoji: '😮', text: "Oh no! It looks like you don't have any tiles to submit. If you cannot play any tile, you must draw one tile from the pool. Then your turn ends." },
+  { emoji: '🥳', text: "Click the draw pile on the far right to draw a tile." },
   { emoji: '🥳', text: "You drew a Joker! If you have a tile that matches what the Joker represents, you can replace it and take the Joker. Now try using the Joker to make a valid group!" },
   { emoji: '🥳', text: 'The first player to empty their rack wins! That\'s all the rules. Ready to play?', last: true },
 ];
@@ -1324,12 +1325,13 @@ function showTutorialStep() {
     document.getElementById('tutorial-content').insertBefore(grid, document.getElementById('tutorial-buttons'));
   }
 
-  if (tutorialStep === 3|tutorialStep === 8) {
+  if (tutorialStep === 3 | tutorialStep === 7) {
     const w = window.innerWidth;
     const h = window.innerHeight;
-    const sw = 800, sh = 90, bottom = 10;
+    const sw = 900, sh = 90, bottom = 10;
+    const offsetFromCenter = 30;
     overlay.classList.add('has-spotlight');
-    overlay.style.setProperty('--spotlight-x', ((w - sw) / 2) + 'px');
+    overlay.style.setProperty('--spotlight-x', ((w - sw) / 2 + offsetFromCenter ) + 'px');
     overlay.style.setProperty('--spotlight-y', (h - sh - bottom) + 'px');
     overlay.style.setProperty('--spotlight-w', sw + 'px');
     overlay.style.setProperty('--spotlight-h', sh + 'px');
@@ -1340,7 +1342,7 @@ function showTutorialStep() {
     const h = window.innerHeight;
     const sw = 200, sh = 90, bottom = 10;
     overlay.classList.add('has-spotlight');
-    const offsetFromCenter = -300;
+    const offsetFromCenter = -320;
     overlay.style.setProperty('--spotlight-x', ((w - sw) / 2 + offsetFromCenter) + 'px');
     overlay.style.setProperty('--spotlight-y', (h - sh - bottom) + 'px');
     overlay.style.setProperty('--spotlight-w', sw + 'px');
@@ -1357,14 +1359,26 @@ function showTutorialStep() {
     overlay.style.setProperty('--spotlight-y', top + 'px');
     overlay.style.setProperty('--spotlight-w', sw + 'px');
     overlay.style.setProperty('--spotlight-h', sh + 'px');
+
   }
 
   if (tutorialStep === 9) {
     const w = window.innerWidth;
     const h = window.innerHeight;
+    const sw = 100, sh = 120, right = 10;
+    overlay.classList.add('has-spotlight');
+    overlay.style.setProperty('--spotlight-x', (w - sw - right) + 'px');
+    overlay.style.setProperty('--spotlight-y', ((h - sh) / 2) + 'px');
+    overlay.style.setProperty('--spotlight-w', sw + 'px');
+    overlay.style.setProperty('--spotlight-h', sh + 'px');
+  }
+
+  if (tutorialStep === 10) {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
     const sw = 80, sh = 90, bottom = 10;
     overlay.classList.add('has-spotlight');
-    const offsetFromCenter = 300;
+    const offsetFromCenter = 370;
     overlay.style.setProperty('--spotlight-x', ((w - sw) / 2 + offsetFromCenter) + 'px');
     overlay.style.setProperty('--spotlight-y', (h - sh - bottom) + 'px');
     overlay.style.setProperty('--spotlight-w', sw + 'px');
@@ -1412,10 +1426,10 @@ function showTutorialStep() {
         endTutorial();
         gameState.currentPlayerIndex = 1;
         startTurn();
-      } else if (tutorialStep === 8) {
+      } else if (tutorialStep === 9) {
         endTutorial();
         awaitingDraw = true;
-      } else if (tutorialStep === 9) {
+      } else if (tutorialStep === 10) {
         endTutorial();
         awaitingJokerPlay = true;
         document.getElementById('draw-btn').disabled = true;
@@ -1436,6 +1450,8 @@ function endTutorial() {
   const overlay = document.getElementById('tutorial-overlay');
   overlay.classList.remove('active');
   overlay.classList.remove('has-spotlight');
+  const extra = document.getElementById('spotlight-hole-2');
+  if (extra) extra.remove();
   tutorialQueue = [];
   tutorialStep = 0;
 }
