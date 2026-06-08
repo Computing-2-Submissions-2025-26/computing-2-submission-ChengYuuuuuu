@@ -201,7 +201,7 @@ body {
 #new-game-btn, #play-again-btn, #music-btn {
   padding: 10px 14px;
   border: none;
-  background: url('assets/board.png') no-repeat center / 100% 100%;
+  background: url('assets/button.png') no-repeat center / 100% 100%;
   color: #fff;
   cursor: pointer;
   transition: transform 0.1s;
@@ -458,7 +458,7 @@ body {
 #controls button {
   padding: 8px 16px;
   border: none;
-  background: url('assets/board.png') no-repeat center / 100% 100%;
+  background: url('assets/button.png') no-repeat center / 100% 100%;
   color: #fff;
   cursor: pointer;
   font-family: 'Press Start 2P', monospace;
@@ -839,15 +839,13 @@ body {
 }
 
 #tutorial-dialog {
-  background: #1a2744;
-  padding: 24px 28px;
-  max-width: 520px;
+  background: url('assets/board.png') no-repeat center / 100% 100%;
+  padding: 32px 28px;
+  max-width: 572px;
   width: 90%;
   display: flex;
   gap: 14px;
   align-items: flex-start;
-  box-shadow: 4px 4px 0 rgba(0,0,0,0.5);
-  border: 2px solid rgba(255,255,255,0.2);
   position: relative;
   z-index: 2;
 }
@@ -880,7 +878,7 @@ body {
 
 #tutorial-text {
   color: #e8e8e8;
-  font-size: 0.85rem;
+  font-size: 0.94rem;
   font-family: 'VT323', monospace;
   line-height: 1.5;
   min-height: 3em;
@@ -894,41 +892,23 @@ body {
 
 #tutorial-buttons button {
   padding: 8px 20px;
-  border: 2px solid transparent;
+  border: none;
   cursor: pointer;
   font-family: 'Press Start 2P', monospace;
-  font-size: 0.5rem;
-  transition: all 0.1s;
-  box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+  font-size: 0.55rem;
+  transition: transform 0.1s, filter 0.1s;
   text-transform: uppercase;
+  background: url('assets/button.png') no-repeat center / 100% 100%;
+  color: #fff;
 }
 
-.tut-btn-primary {
-  background: #f39c12;
-  color: #1a1a2e;
-  border-color: #f1c40f;
+#tutorial-buttons button:hover {
+  transform: scale(1.03);
+  filter: brightness(1.2);
 }
 
-.tut-btn-primary:hover {
-  background: #f1c40f;
-  transform: translateY(-1px);
-  box-shadow: 3px 3px 0 rgba(0,0,0,0.3);
-}
-
-.tut-btn-primary:active {
-  transform: translateY(1px);
-  box-shadow: 1px 1px 0 rgba(0,0,0,0.3);
-}
-
-.tut-btn-secondary {
-  background: rgba(255,255,255,0.1);
-  color: #ccc;
-  border-color: rgba(255,255,255,0.2);
-}
-
-.tut-btn-secondary:hover {
-  background: rgba(255,255,255,0.2);
-  transform: translateY(-1px);
+#tutorial-buttons button:active {
+  transform: scale(0.97);
 }
 
 #tutorial-skip { display: none; 
