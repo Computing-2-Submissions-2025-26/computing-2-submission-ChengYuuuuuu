@@ -700,6 +700,9 @@ function submitTurn() {
   }
 
   gameState = result.newState;
+  if (gameState.mode === 'twoPlayer') {
+    gameState.currentPlayerIndex = playerIdx;
+  }
   if (!wasMelded && gameState.players[playerIdx].hasMelded) {
     showThawAnimation();
   }
@@ -752,7 +755,8 @@ function submitTurn() {
 }
 
 function handleTurnTransition() {
-  const nextPlayer = gameState.players[gameState.currentPlayerIndex];
+  const nextIdx = (gameState.currentPlayerIndex + 1) % gameState.players.length;
+  const nextPlayer = gameState.players[nextIdx];
   if (gameState.mode === 'single' || isTutorialMode || gameState.mode === 'tutorial') {
     setTimeout(startTurn, 50);
   } else {
@@ -765,7 +769,7 @@ function handleTurnTransition() {
     passOverlay.style.textAlign = 'center';
     const label = nextPlayer.id === 'player1' ? 'Player 1' : 'Player 2';
     passOverlay.innerHTML = `
-      <button id="pass-btn" style="margin:10px auto;padding:12px 32px;font-family:'Press Start 2P',monospace;font-size:0.65rem;text-transform:uppercase;border:2px solid #f39c12;color:#f39c12;background:#222;cursor:pointer;box-shadow:3px 3px 0 rgba(0,0,0,0.5);letter-spacing:1px">
+      <button id="pass-btn" style="margin:10px auto;padding:12px 32px;font-family:'Press Start 2P',monospace;font-size:0.65rem;text-transform:uppercase;border:none;color:#fff;cursor:pointer;background:url('assets/button.png') no-repeat center/100% 100%;text-shadow:2px 2px 0 rgba(0,0,0,0.5);letter-spacing:1px;transition:transform 0.1s,filter 0.1s">
         PASS TO ${label}
       </button>`;
     const playerArea = document.getElementById('player-area');
@@ -775,20 +779,74 @@ function handleTurnTransition() {
       document.getElementById('game-screen').appendChild(passOverlay);
     }
 
-    document.getElementById('pass-btn').addEventListener('click', () => {
-      startTurn();
+    const passBtn = document.getElementById('pass-btn');
+    passBtn.addEventListener('click', () => {
+      passBtn.disabled = true;
+      passBtn.style.pointerEvents = 'none';
+      gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
+
+      const playerHand = document.querySelector('#player-hand .tile-row');
+      const aiHand = document.getElementById('ai-hand');
+      const ww = window.innerWidth;
+
+      const flyOut = (el, tx) => {
+        if (!el) return Promise.resolve();
+        const rect = el.getBoundingClientRect();
+        const startX = rect.left;
+        return el.animate([
+          { transform: 'translateX(0)', opacity: 1 },
+          { transform: `translateX(${tx - startX}px)`, opacity: 0 }
+        ], { duration: 300, easing: 'ease-in', fill: 'forwards' }).finished;
+      };
+
+      Promise.all([
+        flyOut(playerHand, ww + 200),
+        flyOut(aiHand, -(ww + 200))
+      ]).then(() => {
+        [playerHand, aiHand].forEach(el => {
+          if (el) { el.getAnimations().forEach(a => a.cancel()); el.style.transform = ''; el.style.opacity = ''; }
+        });
+        startTurn();
+
+        const flyIn = (el, fromX) => {
+          if (!el) return;
+          el.style.transform = `translateX(${fromX}px)`;
+          el.style.opacity = '0';
+          requestAnimationFrame(() => {
+            el.style.transition = 'transform 300ms ease-out, opacity 300ms ease-out';
+            el.style.transform = 'translateX(0)';
+            el.style.opacity = '1';
+            setTimeout(() => {
+              el.style.transition = '';
+              el.style.transform = '';
+              el.style.opacity = '';
+            }, 300);
+          });
+        };
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            const newPlayerHand = document.querySelector('#player-hand .tile-row');
+            const newAiHand = document.getElementById('ai-hand');
+            flyIn(newPlayerHand, ww + 200);
+            flyIn(newAiHand, -(ww + 200));
+          });
+        });
+      });
     });
-    document.getElementById('pass-btn').addEventListener('mouseover', function() {
-      this.style.background = '#f39c12';
-      this.style.color = '#222';
-      this.style.transform = 'translateY(-1px)';
-      this.style.boxShadow = '4px 4px 0 rgba(0,0,0,0.5)';
+    passBtn.addEventListener('mouseover', function() {
+      this.style.transform = 'scale(1.03)';
+      this.style.filter = 'brightness(1.2)';
     });
-    document.getElementById('pass-btn').addEventListener('mouseout', function() {
-      this.style.background = '#222';
-      this.style.color = '#f39c12';
+    passBtn.addEventListener('mouseout', function() {
       this.style.transform = '';
-      this.style.boxShadow = '3px 3px 0 rgba(0,0,0,0.5)';
+      this.style.filter = '';
+    });
+    passBtn.addEventListener('mousedown', function() {
+      this.style.transform = 'scale(0.97)';
+    });
+    passBtn.addEventListener('mouseup', function() {
+      this.style.transform = '';
     });
   }
 }
@@ -851,7 +909,11 @@ function drawAndSkip() {
   animateDraw(() => {
     const prevRackLen = gameState.players[0].rack.length;
     const result = skipAndDraw(gameState);
+    const prevIdx = gameState.currentPlayerIndex;
     gameState = result.newState;
+    if (gameState.mode === 'twoPlayer') {
+      gameState.currentPlayerIndex = prevIdx;
+    }
     pendingRack = null;
     pendingBoard = null;
     originalRackIds = null;
@@ -998,10 +1060,15 @@ function renderAIHand() {
   const container = document.getElementById('ai-hand');
   if (!container || !gameState) return;
   container.innerHTML = '';
-  const aiPlayer = gameState.players[1];
-  if (!aiPlayer) return;
-  const count = aiPlayer.rack.length;
-  for (let i = 0; i < count; i++) {
+  let opponent;
+  if (gameState.mode === 'single' || isTutorialMode) {
+    opponent = gameState.players[1];
+  } else {
+    const currentIdx = gameState.currentPlayerIndex;
+    opponent = gameState.players[1 - currentIdx];
+  }
+  if (!opponent) return;
+  for (let i = 0; i < opponent.rack.length; i++) {
     const tile = document.createElement('div');
     tile.className = 'ai-hand-tile';
     container.appendChild(tile);
