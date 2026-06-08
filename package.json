@@ -9,6 +9,9 @@
   "dependencies": {
     "ramda": "^0.32.0"
   },
+  "scripts": {
+    "test": "node --test web-app/tests/rummikub.test.js"
+  },
   "devDependencies": {
     "docdash": "^2.0.2",
     "mocha": "^11.7.5"
