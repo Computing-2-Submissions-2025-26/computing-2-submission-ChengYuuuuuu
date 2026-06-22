@@ -1343,6 +1343,11 @@ function showTutorialStep() {
   document.getElementById('tutorial-emoji').src = 'assets/' + (emojiMap[step.emoji] || 'normal') + '.png';
   document.getElementById('tutorial-text').textContent = step.text;
 
+  const avatar = document.getElementById('tutorial-avatar');
+  avatar.classList.remove('boing');
+  void avatar.offsetWidth;
+  avatar.classList.add('boing');
+
   const existingGrid = document.getElementById('tutorial-tile-grid');
   if (existingGrid) existingGrid.remove();
 

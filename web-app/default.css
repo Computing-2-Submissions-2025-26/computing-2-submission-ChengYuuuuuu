@@ -63,8 +63,8 @@ body {
 }
 
 .cover-btn {
-  width: 320px;
-  height: 136px;
+  width: 260px;
+  height: 80px;
   background: url('assets/button.png') no-repeat center center / 100% 100%;
   border: none;
   cursor: pointer;
@@ -74,6 +74,7 @@ body {
   color: #F3E9CA;
   text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
   display: flex;
+  text-transform: uppercase;
   align-items: center;
   justify-content: center;
   transition: transform 0.1s, filter 0.1s;
@@ -859,6 +860,18 @@ body {
   transform: translateY(-50%);
   width: 150px;
   height: 150px;
+}
+
+#tutorial-avatar.boing {
+  animation: boing 0.55s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+@keyframes boing {
+  0%   { transform: translateY(-50%) scale(1.15, 0.8); }
+  40%  { transform: translateY(-50%) scale(0.9, 1.2); }
+  60%  { transform: translateY(-50%) scale(1.05, 0.92); }
+  80%  { transform: translateY(-50%) scale(0.98, 1.05); }
+  100% { transform: translateY(-50%) scale(1, 1); }
 }
 
 #tutorial-avatar img {
