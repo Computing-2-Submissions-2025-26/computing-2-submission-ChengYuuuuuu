@@ -769,7 +769,7 @@ function handleTurnTransition() {
     passOverlay.style.textAlign = 'center';
     const label = nextPlayer.id === 'player1' ? 'Player 1' : 'Player 2';
     passOverlay.innerHTML = `
-      <button id="pass-btn" style="margin:10px auto;padding:14px 38px;font-family:'Press Start 2P',monospace;font-size:0.78rem;text-transform:uppercase;border:none;color:#fff;cursor:pointer;background:url('assets/button.png') no-repeat center/100% 100%;text-shadow:2px 2px 0 rgba(0,0,0,0.5);letter-spacing:1px;transition:transform 0.1s,filter 0.1s">
+      <button id="pass-btn" style="margin:10px auto;padding:14px 38px;font-family:'Press Start 2P',monospace;font-size:0.78rem;text-transform:uppercase;border:none;color:#F3E9CA;cursor:pointer;background:url('assets/button.png') no-repeat center/100% 100%;text-shadow:2px 2px 0 rgba(0,0,0,0.5);letter-spacing:1px;transition:transform 0.1s,filter 0.1s">
         PASS TO ${label}
       </button>`;
     const playerArea = document.getElementById('player-area');
@@ -1339,7 +1339,8 @@ function showTutorialStep() {
   dialog.classList.toggle('tutorial-tile-step', tutorialStep === 1 || tutorialStep === 2);
 
   const step = tutorialQueue[tutorialStep];
-  document.getElementById('tutorial-emoji').textContent = step.emoji;
+  const emojiMap = { '😊': 'normal', '🥳': 'happy', '😮': 'surprised', '🤔': 'thinking' };
+  document.getElementById('tutorial-emoji').src = 'assets/' + (emojiMap[step.emoji] || 'normal') + '.png';
   document.getElementById('tutorial-text').textContent = step.text;
 
   const existingGrid = document.getElementById('tutorial-tile-grid');
@@ -1559,7 +1560,6 @@ function disableTutorialMode() {
   }
 }
 
-document.getElementById('tutorial-skip').addEventListener('click', disableTutorialMode);
 
 // Show tutorial on page load (delayed so DOM is ready)
 setTimeout(startTutorial, 200);

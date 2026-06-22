@@ -1,7 +1,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'VT323', 'Courier New', monospace;
+  font-family: 'Press Start 2P', monospace;
   background: #1a1a2e;
   color: #eee;
   height: 100vh;
@@ -64,14 +64,14 @@ body {
 
 .cover-btn {
   width: 320px;
-  height: 90px;
+  height: 136px;
   background: url('assets/button.png') no-repeat center center / 100% 100%;
   border: none;
   cursor: pointer;
   font-family: 'Press Start 2P', monospace;
   font-size: 0.75rem;
   font-weight: 400;
-  color: #fff;
+  color: #F3E9CA;
   text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
@@ -135,7 +135,7 @@ body {
 }
 
 .tile-count {
-  font-family: 'Silkscreen', 'Courier New', monospace;
+  font-family: 'Press Start 2P', monospace;
   font-size: 1.3rem;
   font-weight: bold;
   color: #ffd700;
@@ -148,7 +148,7 @@ body {
 }
 
 #turn-indicator {
-  font-family: 'Silkscreen', 'Courier New', monospace;
+  font-family: 'Press Start 2P', monospace;
   font-weight: bold;
   font-size: 0.8rem;
   color: #ffd700;
@@ -191,7 +191,7 @@ body {
 }
 
 #pool-info {
-  font-family: 'Silkscreen', 'Courier New', monospace;
+  font-family: 'Press Start 2P', monospace;
   font-size: 0.75rem;
   color: #aaa;
   padding: 2px 6px;
@@ -203,7 +203,7 @@ body {
   min-height: 36px;
   border: none;
   background: url('assets/button.png') no-repeat center / 100% 100%;
-  color: #fff;
+  color: #F3E9CA;
   cursor: pointer;
   transition: transform 0.1s;
   font-family: 'Press Start 2P', monospace;
@@ -310,7 +310,7 @@ body {
   padding: 20px;
   text-align: center;
   width: 100%;
-  font-family: 'Silkscreen', monospace;
+  font-family: 'Press Start 2P', monospace;
   font-size: 0.8rem;
 }
 
@@ -371,7 +371,7 @@ body {
 }
 
 .tile .tile-value {
-  font-family: 'Silkscreen', 'Courier New', monospace;
+  font-family: 'Press Start 2P', monospace;
   font-size: 1.6rem;
   line-height: 1;
   z-index: 2;
@@ -420,7 +420,7 @@ body {
 }
 
 .tile.joker .tile-sub {
-  font-family: 'VT323', monospace;
+  font-family: 'Press Start 2P', monospace;
   font-size: 0.7rem;
   font-weight: bold;
   position: absolute;
@@ -461,7 +461,7 @@ body {
   min-height: 36px;
   border: none;
   background: url('assets/button.png') no-repeat center / 100% 100%;
-  color: #fff;
+  color: #F3E9CA;
   cursor: pointer;
   font-family: 'Press Start 2P', monospace;
   font-size: 0.72rem;
@@ -571,7 +571,7 @@ body {
   background: #000;
   color: #fff;
   padding: 2px 10px;
-  font-family: 'Silkscreen', 'Courier New', monospace;
+  font-family: 'Press Start 2P', monospace;
   font-size: 0.75rem;
   min-width: 30px;
   text-align: center;
@@ -766,7 +766,7 @@ body {
 .tutorial-tile-label {
   width: 14px;
   font-size: 0.5rem;
-  font-family: 'Silkscreen', monospace;
+  font-family: 'Press Start 2P', monospace;
   font-weight: bold;
   color: #888;
   text-align: center;
@@ -781,7 +781,7 @@ body {
   justify-content: center;
   font-weight: bold;
   font-size: 0.6rem;
-  font-family: 'Silkscreen', monospace;
+  font-family: 'Press Start 2P', monospace;
   border: 1px solid rgba(0,0,0,0.15);
   flex-shrink: 0;
   color: #fff;
@@ -843,33 +843,28 @@ body {
 
 #tutorial-dialog {
   background: url('assets/board.png') no-repeat center / 100% 100%;
-  padding: 32px 28px;
-  max-width: 572px;
+  padding: 32px 28px 32px 200px;
+  max-width: 720px;
   width: 90%;
   display: flex;
-  gap: 14px;
   align-items: flex-start;
   position: relative;
   z-index: 2;
 }
 
 #tutorial-avatar {
-  width: 50px;
-  height: 50px;
-  background: #0f1a30;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  flex-shrink: 0;
-  border: 1px solid rgba(255,255,255,0.15);
-  box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
-  animation: avatarBreathe 3s steps(4) infinite;
+  position: absolute;
+  left: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 150px;
+  height: 150px;
 }
 
-@keyframes avatarBreathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.06); }
+#tutorial-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 #tutorial-content {
@@ -880,10 +875,10 @@ body {
 }
 
 #tutorial-text {
-  color: #e8e8e8;
-  font-size: 1.08rem;
-  font-family: 'VT323', monospace;
-  line-height: 1.5;
+  color: #552516;
+  font-size: 0.6rem;
+  font-family: 'Press Start 2P', monospace;
+  line-height: 1.2;
   min-height: 3em;
 }
 
@@ -902,7 +897,7 @@ body {
   transition: transform 0.1s, filter 0.1s;
   text-transform: uppercase;
   background: url('assets/button.png') no-repeat center / 100% 100%;
-  color: #fff;
+  color: #F3E9CA;
 }
 
 #tutorial-buttons button:hover {
@@ -914,23 +909,6 @@ body {
   transform: scale(0.97);
 }
 
-#tutorial-skip { display: none; 
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  background: none;
-  border: none;
-  color: #666;
-  font-family: 'VT323', monospace;
-  font-size: 0.72rem;
-  cursor: pointer;
-  padding: 5px 14px;
-  transition: color 0.1s;
-}
-
-#tutorial-skip:hover {
-  color: #ccc;
-}
 
 /* ===== Scrollbar ===== */
 ::-webkit-scrollbar { width: 6px; }
