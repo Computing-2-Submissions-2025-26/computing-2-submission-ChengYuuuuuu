@@ -719,7 +719,7 @@ function submitTurn() {
     const overlay = document.getElementById('tutorial-overlay');
     overlay.classList.add('active');
     tutorialQueue = [...tutorialNo];
-    tutorialStep = 10;
+    tutorialStep = 11;
     showTutorialStep();
     return;
   }
@@ -900,7 +900,6 @@ function drawAndSkip() {
       showTutorialStep();
     }
 
-    showMessage('You drew a Joker! (Wild tile - can represent any tile)', 'success');
     renderAll();
     handleTurnTransition();
     return;
