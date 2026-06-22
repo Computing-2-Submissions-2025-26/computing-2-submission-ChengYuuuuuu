@@ -796,7 +796,7 @@ function handleTurnTransition() {
         return el.animate([
           { transform: 'translateX(0)', opacity: 1 },
           { transform: `translateX(${tx - startX}px)`, opacity: 0 }
-        ], { duration: 300, easing: 'ease-in', fill: 'forwards' }).finished;
+        ], { duration: 600, easing: 'ease-in', fill: 'forwards' }).finished;
       };
 
       Promise.all([
@@ -813,14 +813,14 @@ function handleTurnTransition() {
           el.style.transform = `translateX(${fromX}px)`;
           el.style.opacity = '0';
           requestAnimationFrame(() => {
-            el.style.transition = 'transform 300ms ease-out, opacity 300ms ease-out';
+            el.style.transition = 'transform 600ms ease-out, opacity 600ms ease-out';
             el.style.transform = 'translateX(0)';
             el.style.opacity = '1';
             setTimeout(() => {
               el.style.transition = '';
               el.style.transform = '';
               el.style.opacity = '';
-            }, 300);
+            }, 600);
           });
         };
 
@@ -828,8 +828,8 @@ function handleTurnTransition() {
           requestAnimationFrame(() => {
             const newPlayerHand = document.querySelector('#player-hand .tile-row');
             const newAiHand = document.getElementById('ai-hand');
-            flyIn(newPlayerHand, ww + 200);
-            flyIn(newAiHand, -(ww + 200));
+            flyIn(newPlayerHand, -(ww + 200));
+            flyIn(newAiHand, ww + 200);
           });
         });
       });
