@@ -64,7 +64,7 @@ body {
 
 .cover-btn {
   width: 320px;
-  height: 68px;
+  height: 90px;
   background: url('assets/button.png') no-repeat center center / 100% 100%;
   border: none;
   cursor: pointer;
@@ -199,14 +199,15 @@ body {
 }
 
 #new-game-btn, #play-again-btn, #music-btn {
-  padding: 10px 14px;
+  padding: 12px 17px;
+  min-height: 36px;
   border: none;
   background: url('assets/button.png') no-repeat center / 100% 100%;
   color: #fff;
   cursor: pointer;
   transition: transform 0.1s;
   font-family: 'Press Start 2P', monospace;
-  font-size: 0.5rem;
+  font-size: 0.72rem;
   text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
 }
 
@@ -456,13 +457,14 @@ body {
 }
 
 #controls button {
-  padding: 8px 16px;
+  padding: 10px 19px;
+  min-height: 36px;
   border: none;
   background: url('assets/button.png') no-repeat center / 100% 100%;
   color: #fff;
   cursor: pointer;
   font-family: 'Press Start 2P', monospace;
-  font-size: 0.55rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   transition: transform 0.08s;
   letter-spacing: 0.5px;
@@ -832,6 +834,7 @@ body {
   align-items: center;
   justify-content: center;
   z-index: 200;
+  padding: 24px;
 }
 
 #tutorial-overlay.active {
@@ -878,7 +881,7 @@ body {
 
 #tutorial-text {
   color: #e8e8e8;
-  font-size: 0.94rem;
+  font-size: 1.08rem;
   font-family: 'VT323', monospace;
   line-height: 1.5;
   min-height: 3em;
@@ -891,11 +894,11 @@ body {
 }
 
 #tutorial-buttons button {
-  padding: 8px 20px;
+  padding: 10px 24px;
   border: none;
   cursor: pointer;
   font-family: 'Press Start 2P', monospace;
-  font-size: 0.55rem;
+  font-size: 0.96rem;
   transition: transform 0.1s, filter 0.1s;
   text-transform: uppercase;
   background: url('assets/button.png') no-repeat center / 100% 100%;
@@ -919,9 +922,9 @@ body {
   border: none;
   color: #666;
   font-family: 'VT323', monospace;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 5px 14px;
   transition: color 0.1s;
 }
 

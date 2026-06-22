@@ -769,7 +769,7 @@ function handleTurnTransition() {
     passOverlay.style.textAlign = 'center';
     const label = nextPlayer.id === 'player1' ? 'Player 1' : 'Player 2';
     passOverlay.innerHTML = `
-      <button id="pass-btn" style="margin:10px auto;padding:12px 32px;font-family:'Press Start 2P',monospace;font-size:0.65rem;text-transform:uppercase;border:none;color:#fff;cursor:pointer;background:url('assets/button.png') no-repeat center/100% 100%;text-shadow:2px 2px 0 rgba(0,0,0,0.5);letter-spacing:1px;transition:transform 0.1s,filter 0.1s">
+      <button id="pass-btn" style="margin:10px auto;padding:14px 38px;font-family:'Press Start 2P',monospace;font-size:0.78rem;text-transform:uppercase;border:none;color:#fff;cursor:pointer;background:url('assets/button.png') no-repeat center/100% 100%;text-shadow:2px 2px 0 rgba(0,0,0,0.5);letter-spacing:1px;transition:transform 0.1s,filter 0.1s">
         PASS TO ${label}
       </button>`;
     const playerArea = document.getElementById('player-area');
@@ -808,10 +808,14 @@ function handleTurnTransition() {
         });
         startTurn();
 
+        const newPlayerHand = document.querySelector('#player-hand .tile-row');
+        const newAiHand = document.getElementById('ai-hand');
+        if (newPlayerHand) { newPlayerHand.style.opacity = '0'; }
+        if (newAiHand) { newAiHand.style.opacity = '0'; }
+
         const flyIn = (el, fromX) => {
           if (!el) return;
           el.style.transform = `translateX(${fromX}px)`;
-          el.style.opacity = '0';
           requestAnimationFrame(() => {
             el.style.transition = 'transform 300ms ease-out, opacity 300ms ease-out';
             el.style.transform = 'translateX(0)';
@@ -826,8 +830,6 @@ function handleTurnTransition() {
 
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            const newPlayerHand = document.querySelector('#player-hand .tile-row');
-            const newAiHand = document.getElementById('ai-hand');
             flyIn(newPlayerHand, -(ww + 200));
             flyIn(newAiHand, ww + 200);
           });
