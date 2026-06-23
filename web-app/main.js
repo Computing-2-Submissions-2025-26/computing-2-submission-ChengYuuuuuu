@@ -791,6 +791,8 @@ function handleTurnTransition() {
 
       const playerHand = document.querySelector('#player-hand .tile-row');
       const aiHand = document.getElementById('ai-hand');
+      const playerInfo = document.getElementById('player1-info');
+      const aiInfo = document.getElementById('player2-info');
       const ww = window.innerWidth;
 
       const flyOut = (el, tx) => {
@@ -806,17 +808,24 @@ function handleTurnTransition() {
       SFX.whoosh();
       Promise.all([
         flyOut(playerHand, ww + 200),
-        flyOut(aiHand, -(ww + 200))
+        flyOut(aiHand, -(ww + 200)),
+        flyOut(playerInfo, ww + 200),
+        flyOut(aiInfo, -(ww + 200))
       ]).then(() => {
-        [playerHand, aiHand].forEach(el => {
+        [playerHand, aiHand, playerInfo, aiInfo].forEach(el => {
           if (el) { el.getAnimations().forEach(a => a.cancel()); el.style.transform = ''; el.style.opacity = ''; }
         });
+
+        const hiddenStyle = document.createElement('style');
+        hiddenStyle.textContent = '#player-hand .tile-row,#ai-hand,#player1-info,#player2-info{opacity:0!important;transform:translateX(0)!important}';
+        document.head.appendChild(hiddenStyle);
+
         startTurn();
 
         const newPlayerHand = document.querySelector('#player-hand .tile-row');
         const newAiHand = document.getElementById('ai-hand');
-        if (newPlayerHand) { newPlayerHand.style.opacity = '0'; }
-        if (newAiHand) { newAiHand.style.opacity = '0'; }
+        const newPlayerInfo = document.getElementById('player1-info');
+        const newAiInfo = document.getElementById('player2-info');
 
         const flyIn = (el, fromX) => {
           if (!el) return;
@@ -834,9 +843,16 @@ function handleTurnTransition() {
         };
 
         requestAnimationFrame(() => {
+          if (newPlayerHand) newPlayerHand.style.transform = `translateX(${-(ww + 200)}px)`;
+          if (newAiHand) newAiHand.style.transform = `translateX(${ww + 200}px)`;
+          if (newPlayerInfo) newPlayerInfo.style.transform = `translateX(${-(ww + 200)}px)`;
+          if (newAiInfo) newAiInfo.style.transform = `translateX(${ww + 200}px)`;
+          hiddenStyle.remove();
           requestAnimationFrame(() => {
             flyIn(newPlayerHand, -(ww + 200));
             flyIn(newAiHand, ww + 200);
+            flyIn(newPlayerInfo, -(ww + 200));
+            flyIn(newAiInfo, ww + 200);
           });
         });
       });
@@ -1096,9 +1112,14 @@ function renderGameInfo() {
   const current = getCurrentPlayer();
   const players = gameState.players;
   const turnEl = document.getElementById('turn-indicator');
-
+  const isTwoPlayer = gameState.mode === 'twoPlayer';
   const isSingle = gameState.mode === 'single' || isTutorialMode;
-  players.forEach((p, i) => {
+
+  const displayOrder = isTwoPlayer
+    ? [current, players.find(p => p.id !== current.id)]
+    : players;
+
+  displayOrder.forEach((p, i) => {
     const infoEl = document.getElementById(i === 0 ? 'player1-info' : 'player2-info');
     const countEl = document.getElementById(i === 0 ? 'count-p1' : 'count-p2');
     const avatarEl = document.getElementById(i === 0 ? 'avatar-p1' : 'avatar-p2');
@@ -1114,7 +1135,9 @@ function renderGameInfo() {
     const nameEl = document.getElementById(i === 0 ? 'name-p1' : 'name-p2');
     if (nameEl) {
       if (isSingle) {
-        nameEl.textContent = i === 0 ? 'YOU' : 'CPU';
+        nameEl.textContent = p.id === 'player1' ? 'YOU' : 'CPU';
+      } else if (isTwoPlayer) {
+        nameEl.textContent = p.id === 'player1' ? 'P1' : 'P2';
       } else {
         nameEl.textContent = i === 0 ? 'P1' : 'P2';
       }
