@@ -22,7 +22,7 @@ let isAnimatingDraw = false;
 let _justDrewTileId = null;
 
 const bgm = document.getElementById('bgm');
-bgm.volume = 0.5;
+bgm.volume = 0.25;
 let musicOn = false;
 
 function toggleMusic() {
@@ -65,21 +65,22 @@ function setupEventListeners() {
   document.querySelector('.cover-buttons').addEventListener('click', e => {
     const btn = e.target.closest('button');
     if (!btn) return;
+    SFX.button();
     const mode = btn.dataset.mode;
     const difficulty = btn.dataset.difficulty || null;
     if (!musicOn) toggleMusic();
     startGame(mode, difficulty);
   });
 
-  document.getElementById('new-game-btn').addEventListener('click', showStartScreen);
-  document.getElementById('play-again-btn').addEventListener('click', showStartScreen);
+  document.getElementById('new-game-btn').addEventListener('click', () => { SFX.button(); showStartScreen(); });
+  document.getElementById('play-again-btn').addEventListener('click', () => { SFX.button(); showStartScreen(); });
 
-  document.getElementById('music-btn').addEventListener('click', toggleMusic);
+  document.getElementById('music-btn').addEventListener('click', () => { SFX.button(); toggleMusic(); });
 
-  document.getElementById('submit-btn').addEventListener('click', submitTurn);
-  document.getElementById('cancel-btn').addEventListener('click', cancelTurn);
-  document.getElementById('draw-btn').addEventListener('click', drawAndSkip);
-  document.getElementById('draw-pile').addEventListener('click', drawAndSkip);
+  document.getElementById('submit-btn').addEventListener('click', () => { SFX.button(); submitTurn(); });
+  document.getElementById('cancel-btn').addEventListener('click', () => { SFX.button(); cancelTurn(); });
+  document.getElementById('draw-btn').addEventListener('click', () => { SFX.button(); drawAndSkip(); });
+  document.getElementById('draw-pile').addEventListener('click', () => { SFX.button(); drawAndSkip(); });
 
   document.getElementById('board-groups').addEventListener('click', e => {
     const groupEl = e.target.closest('.board-group');
@@ -281,6 +282,7 @@ function commitTileMove(tileIds, sourceType, sourceGroupIdx, targetIdx, newTarge
 }
 
 function afterTileMove(skipMsg = false) {
+  SFX.place();
   pendingBoard = pendingBoard.filter(g => g.length > 0).map(g => sortGroup(g));
   selectedTileIds.clear();
   selectedGroupIdx = -1;
@@ -630,6 +632,7 @@ function getCurrentPlayer() {
 
 function toggleTileSelection(id) {
   if (isProcessing) return;
+  SFX.click();
   if (selectedTileIds.has(id)) {
     selectedTileIds.delete(id);
   } else {
@@ -781,6 +784,7 @@ function handleTurnTransition() {
 
     const passBtn = document.getElementById('pass-btn');
     passBtn.addEventListener('click', () => {
+      SFX.button();
       passBtn.disabled = true;
       passBtn.style.pointerEvents = 'none';
       gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
@@ -799,6 +803,7 @@ function handleTurnTransition() {
         ], { duration: 300, easing: 'ease-in', fill: 'forwards' }).finished;
       };
 
+      SFX.whoosh();
       Promise.all([
         flyOut(playerHand, ww + 200),
         flyOut(aiHand, -(ww + 200))
@@ -961,6 +966,7 @@ function drawAndSkip() {
 function animateDraw(callback) {
   if (isAnimatingDraw) return;
   isAnimatingDraw = true;
+  SFX.draw();
 
   const pile = document.getElementById('draw-pile');
   const rackTiles = document.getElementById('rack-tiles');
@@ -1037,6 +1043,7 @@ function showPixelConfetti() {
 function showGameOver(winnerId) {
   stopMusic();
   hideAllScreens();
+  if (winnerId === 'player1') SFX.win(); else SFX.lose();
   document.getElementById('gameover-screen').style.display = 'flex';
   const label = winnerId === 'player1' ? 'Player 1' : (winnerId === 'player2' ? 'Player 2' : 'AI');
   document.getElementById('winner-text').textContent = `${label} WINS!`;
@@ -1102,7 +1109,7 @@ function renderGameInfo() {
       infoEl.style.opacity = isCurrent ? '1' : '0.5';
     }
     if (avatarEl) {
-      avatarEl.style.background = p.id === 'player1' ? '#3498db' : (p.id === 'AI' ? '#e67e22' : '#e74c3c');
+      avatarEl.style.backgroundImage = `url('assets/${p.id === 'player1' ? 'p1' : 'p2'}.png')`;
     }
     const nameEl = document.getElementById(i === 0 ? 'name-p1' : 'name-p2');
     if (nameEl) {
@@ -1468,6 +1475,7 @@ function showTutorialStep() {
     yesBtn.className = 'tut-btn-primary';
     yesBtn.textContent = 'Yes';
     yesBtn.addEventListener('click', () => {
+      SFX.button();
       tutorialQueue = [...tutorialYes];
       tutorialStep = 0;
       showTutorialStep();
@@ -1476,6 +1484,7 @@ function showTutorialStep() {
     noBtn.className = 'tut-btn-secondary';
     noBtn.textContent = 'No';
     noBtn.addEventListener('click', () => {
+      SFX.button();
       endTutorial();
       startTutorialGame();
       const overlay = document.getElementById('tutorial-overlay');
@@ -1491,6 +1500,7 @@ function showTutorialStep() {
     nextBtn.className = 'tut-btn-primary';
     nextBtn.textContent = step.startGame ? "Let's Play! 🎮" : (step.last ? "Let's Play! 🎮" : 'Next ➡');
     nextBtn.addEventListener('click', () => {
+      SFX.button();
       if (step.startGame) {
         endTutorial();
         startTutorialGame();

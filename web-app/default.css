@@ -109,21 +109,23 @@ body {
 
 .player-info.active {
   transform: scale(1.5);
-  filter: drop-shadow(0 0 6px #ffd700);
+  filter: drop-shadow(0 0 6px #fffae1);
 }
 
 .player-info.active .avatar {
-  box-shadow: 0 0 0 2px #ffd700;
+  transform: scale(1.5);
 }
 
 .avatar {
   width: 28px;
   height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2.2rem;
   flex-shrink: 0;
+  background-color: #F3E9CA;
+  background-size: 150%;
+  background-repeat: no-repeat;
+  background-position: center;
+  border: 2px solid rgb(84, 39, 34);
+  overflow: hidden;
   transition: box-shadow 0.15s;
 }
 
@@ -133,6 +135,8 @@ body {
   color: #fff;
   text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
   line-height: 1;
+  position: relative;
+  z-index: 1;
 }
 
 .tile-count {
