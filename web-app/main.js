@@ -359,13 +359,28 @@ function startTutorialGame() {
     { id: 28, color: 'red', value: 2, isJoker: false },
   ];
 
-  const jokerTile = { id: 29, color: null, value: null, isJoker: true };
-  const pool = [jokerTile];
-  let nextId = 30;
-  const colors = ['red', 'blue', 'yellow', 'black'];
-  for (let i = 0; i < 50; i++) {
-    pool.push({ id: nextId++, color: colors[i % 4], value: (i % 13) + 1, isJoker: false });
+  const allPreset = [...humanTiles, ...aiTiles];
+  const presetKey = t => `${t.color}|${t.value}|${t.isJoker}`;
+  const presetKeys = new Set(allPreset.map(presetKey));
+
+  const allTiles = [];
+  let nextId = 1;
+  for (const t of allPreset) { t.id = nextId++; }
+  for (let copy = 0; copy < 2; copy++) {
+    allTiles.push({ id: nextId++, color: null, value: null, isJoker: true });
   }
+  for (const color of ['red', 'blue', 'yellow', 'black']) {
+    for (let value = 1; value <= 13; value++) {
+      for (let copy = 0; copy < 2; copy++) {
+        const key = `${color}|${value}|false`;
+        if (presetKeys.has(key)) { presetKeys.delete(key); continue; }
+        allTiles.push({ id: nextId++, color, value, isJoker: false });
+      }
+    }
+  }
+
+  const usedIds = new Set(allPreset.map(t => t.id));
+  const pool = allTiles.filter(t => !usedIds.has(t.id));
 
   gameState = {
     mode: 'tutorial',
@@ -552,10 +567,13 @@ function doAITurn() {
     const aiMove = getAIMove(gameState);
 
     if (aiMove.action === 'draw') {
-      const result = skipAndDraw(gameState);
-      gameState = result.newState;
-      isProcessing = false;
-      afterAITurn();
+      animateDraw(() => {
+        showBarrage('SKIP', '#f39c12', 'top');
+        const result = skipAndDraw(gameState);
+        gameState = result.newState;
+        isProcessing = false;
+        afterAITurn();
+      }, 'ai-hand');
       return;
     }
 
@@ -666,26 +684,6 @@ function submitTurn() {
   if (tilesToPlay.length === 0 && jokerReplacements.length === 0) {
     showMessage('No tiles to play or replace', 'error');
     return;
-  }
-
-  if (isTutorialMode && tutorialGameStep === 1) {
-    const expected = [1, 2, 3];
-    if (playedIds.length !== expected.length || !expected.every(id => playedIds.includes(id))) {
-      showMessage('Step 1: Select the three 11 tiles (red, blue, yellow) to form a group!', 'error');
-      return;
-    }
-  }
-
-  if (isTutorialMode && tutorialGameStep === 5) {
-    const expected = [4, 5, 29];
-    if (playedIds.length !== expected.length || !expected.every(id => playedIds.includes(id))) {
-      showMessage('Step 5: Select black 7, black 8, and the Joker, then drag them to the black group!', 'error');
-      return;
-    }
-    if (pendingBoard.length !== 2) {
-      showMessage('Step 5: Drag the tiles into the existing black group, not a new group!', 'error');
-      return;
-    }
   }
 
   const player = gameState.players[gameState.currentPlayerIndex];
@@ -895,6 +893,17 @@ function drawAndSkip() {
     return;
   }
 
+  if (isTutorialMode) {
+    if (tutorialGameStep === 1 || tutorialGameStep === 5) {
+      showMessage('Complete the required move first!', 'error');
+      return;
+    }
+    if (awaitingInitialMeld || awaitingJokerPlay) {
+      showMessage('Complete the required move first!', 'error');
+      return;
+    }
+  }
+
   const pile = document.getElementById('draw-pile');
   if (pile.classList.contains('disabled')) return;
 
@@ -914,6 +923,8 @@ function drawAndSkip() {
     consecutiveEmptySkips = 0;
     tutorialGameStep = 4;
 
+    showBarrage('SKIP', '#f39c12', 'bottom');
+
     if (awaitingDraw) {
       awaitingDraw = false;
       const overlay = document.getElementById('tutorial-overlay');
@@ -929,6 +940,7 @@ function drawAndSkip() {
   }
 
   animateDraw(() => {
+    showBarrage('SKIP', '#f39c12', 'bottom');
     const prevRackLen = gameState.players[0].rack.length;
     const result = skipAndDraw(gameState);
     const prevIdx = gameState.currentPlayerIndex;
@@ -979,20 +991,22 @@ function drawAndSkip() {
   });
 }
 
-function animateDraw(callback) {
+function animateDraw(callback, targetElId) {
   if (isAnimatingDraw) return;
   isAnimatingDraw = true;
   SFX.draw();
 
+  const targetId = targetElId || 'rack-tiles';
   const pile = document.getElementById('draw-pile');
-  const rackTiles = document.getElementById('rack-tiles');
+  const target = document.getElementById(targetId);
+  if (!target) { isAnimatingDraw = false; callback(); return; }
   const pileRect = pile.getBoundingClientRect();
-  const rackRect = rackTiles.getBoundingClientRect();
+  const targetRect = target.getBoundingClientRect();
 
   const startX = pileRect.left + pileRect.width / 2 - 24;
   const startY = pileRect.top + pileRect.height / 2 - 32;
-  const endX = rackRect.right - 48;
-  const endY = rackRect.top + rackRect.height / 2 - 32;
+  const endX = targetRect.right - 48;
+  const endY = targetRect.top + targetRect.height / 2 - 32;
 
   const flyCard = document.createElement('div');
   flyCard.className = 'flying-card';
@@ -1066,18 +1080,31 @@ function showGameOver(winnerId) {
   showPixelConfetti();
 }
 
-function showThawAnimation() {
+function showBarrage(text, color, position) {
   const overlay = document.createElement('div');
-  overlay.className = 'thaw-overlay';
-  overlay.innerHTML = '<div class="thaw-text">Thawed!</div>';
+  overlay.className = 'barrage-overlay' + (position ? ' ' + position : ' center');
+  const el = document.createElement('div');
+  el.className = 'barrage-text';
+  el.textContent = text;
+  el.style.color = color;
+  overlay.appendChild(el);
   document.body.appendChild(overlay);
-  setTimeout(() => overlay.remove(), 1200);
+  setTimeout(() => overlay.remove(), 1500);
+}
+
+function showThawAnimation() {
+  showBarrage('THAWED!', '#3498db');
 }
 
 function updateFrozenState() {
   const screen = document.getElementById('game-screen');
-  const human = gameState.players[0];
-  screen.classList.toggle('frozen', human && !human.hasMelded);
+  if (gameState.mode === 'twoPlayer') {
+    const current = getCurrentPlayer();
+    screen.classList.toggle('frozen', current && !current.hasMelded);
+  } else {
+    const human = gameState.players[0];
+    screen.classList.toggle('frozen', human && !human.hasMelded);
+  }
 }
 
 function renderAIHand() {
@@ -1123,14 +1150,15 @@ function renderGameInfo() {
     const infoEl = document.getElementById(i === 0 ? 'player1-info' : 'player2-info');
     const countEl = document.getElementById(i === 0 ? 'count-p1' : 'count-p2');
     const avatarEl = document.getElementById(i === 0 ? 'avatar-p1' : 'avatar-p2');
+    const isCurrent = p.id === current?.id;
     if (countEl) countEl.textContent = `×${p.rack.length}`;
     if (infoEl) {
-      const isCurrent = p.id === current?.id;
       infoEl.classList.toggle('active', isCurrent);
       infoEl.style.opacity = isCurrent ? '1' : '0.5';
     }
     if (avatarEl) {
       avatarEl.style.backgroundImage = `url('assets/${p.id === 'player1' ? 'p1' : 'p2'}.png')`;
+      avatarEl.classList.toggle('avatar-opponent', !isCurrent);
     }
     const nameEl = document.getElementById(i === 0 ? 'name-p1' : 'name-p2');
     if (nameEl) {
@@ -1540,10 +1568,14 @@ function showTutorialStep() {
         endTutorial();
         awaitingJokerPlay = true;
         document.getElementById('draw-btn').disabled = true;
+        updateControls();
+        renderAll();
       } else if (tutorialStep === 4) {
         endTutorial();
         awaitingInitialMeld = true;
         document.getElementById('draw-btn').disabled = true;
+        updateControls();
+        renderAll();
       } else {
         tutorialStep++;
         showTutorialStep();

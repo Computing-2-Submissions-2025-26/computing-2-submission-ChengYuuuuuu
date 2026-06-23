@@ -113,12 +113,12 @@ body {
 }
 
 .player-info.active .avatar {
-  transform: scale(1.5);
+  transform: scale(1.2);
 }
 
 .avatar {
-  width: 28px;
-  height: 28px;
+  width:35px;
+  height: 35px;
   flex-shrink: 0;
   background-color: #F3E9CA;
   background-size: 150%;
@@ -459,6 +459,7 @@ body {
   justify-content: center;
   flex-shrink: 0;
   padding: 4px 0;
+  margin-top: -20px;
 }
 
 #controls button {
@@ -521,6 +522,7 @@ body {
 
 #ai-area #player2-info {
   padding: 0;
+  margin-top: 10px;
 }
 
 #draw-pile {
@@ -712,33 +714,43 @@ body {
   outline-offset: 3px;
 }
 
-/* ===== Thaw Animation ===== */
-.thaw-overlay {
+/* ===== Barrage Animation ===== */
+.barrage-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   display: flex;
-  align-items: center;
   justify-content: center;
   pointer-events: none;
-  z-index: 100;
+  z-index: 1000;
 }
 
-.thaw-text {
+.barrage-overlay.top {
+  align-items: flex-start;
+  padding-top: 10%;
+}
+
+.barrage-overlay.center {
+  align-items: center;
+}
+
+.barrage-overlay.bottom {
+  align-items: flex-end;
+  padding-bottom: 10%;
+}
+
+.barrage-text {
   font-family: 'Press Start 2P', monospace;
-  font-size: 2rem;
-  color: #f1c40f;
-  text-shadow: 3px 3px 0 rgba(0,0,0,0.6);
-  animation: thawPop 0.25s steps(4) forwards, thawFade 0.3s steps(4) 0.7s forwards;
-  opacity: 0;
-  transform: scale(0.5);
+  font-size: 2.5rem;
+  text-shadow: 4px 4px 0 rgba(0,0,0,0.5);
+  animation: barragePop 1.5s ease-out forwards;
 }
 
-@keyframes thawPop {
-  to { opacity: 1; transform: scale(1); }
-}
-
-@keyframes thawFade {
-  to { opacity: 0; transform: scale(1.1); }
+@keyframes barragePop {
+  0% { transform: scale(0.5); opacity: 0; }
+  20% { transform: scale(1.2); opacity: 1; }
+  33.33% { transform: scale(1); opacity: 1; }
+  66.67% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.8); opacity: 0; }
 }
 
 /* ===== Pixel Confetti Container ===== */
