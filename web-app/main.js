@@ -19,6 +19,8 @@ let showAIPlayComplete = false;
 let awaitingDraw = false;
 let awaitingJokerPlay = false;
 let isAnimatingDraw = false;
+let isTransitioning = false;
+let awaitingPass = false;
 let _justDrewTileId = null;
 
 const bgm = document.getElementById('bgm');
@@ -152,7 +154,7 @@ function trySnapToGroup(group, tile) {
 
 function handleDragStart(e) {
   const tileEl = e.target.closest('.tile');
-  if (!tileEl || isProcessing) return;
+  if (!tileEl || isProcessing || awaitingPass) return;
   const tileId = parseInt(tileEl.dataset.id, 10);
   if (isNaN(tileId)) return;
 
@@ -220,7 +222,7 @@ function handleDragOver(e) {
 
 function handleBoardDrop(e) {
   e.preventDefault();
-  if (!dragData) return;
+  if (!dragData || awaitingPass) return;
   const { tileIds, tiles, sourceType, sourceGroupIdx } = dragData;
 
   const groupEl = e.target.closest('.board-group');
@@ -308,7 +310,7 @@ function afterTileMove(skipMsg = false) {
 
 function handleRackDrop(e) {
   e.preventDefault();
-  if (!dragData) return;
+  if (!dragData || awaitingPass) return;
   const { tileIds, tiles, sourceType, sourceGroupIdx } = dragData;
   if (sourceType !== 'board' || sourceGroupIdx < 0) return;
 
@@ -649,7 +651,7 @@ function getCurrentPlayer() {
 }
 
 function toggleTileSelection(id) {
-  if (isProcessing) return;
+  if (isProcessing || awaitingPass) return;
   SFX.click();
   if (selectedTileIds.has(id)) {
     selectedTileIds.delete(id);
@@ -661,7 +663,7 @@ function toggleTileSelection(id) {
 }
 
 function selectBoardGroup(idx) {
-  if (isProcessing) return;
+  if (isProcessing || awaitingPass) return;
   if (selectedGroupIdx === idx) {
     selectedGroupIdx = -1;
   } else {
@@ -672,7 +674,7 @@ function selectBoardGroup(idx) {
 }
 
 function submitTurn() {
-  if (isProcessing) return;
+  if (isProcessing || awaitingPass) return;
 
   const playedIds = originalRackIds.filter(id => !pendingRack.some(t => t.id === id));
   const tilesToPlay = playedIds
@@ -728,6 +730,9 @@ function submitTurn() {
   gameState = result.newState;
   if (gameState.mode === 'twoPlayer') {
     gameState.currentPlayerIndex = playerIdx;
+    isProcessing = true;
+    awaitingPass = true;
+    updateControls();
   }
   if (!wasMelded && gameState.players[playerIdx].hasMelded) {
     showThawAnimation();
@@ -781,19 +786,59 @@ function submitTurn() {
 }
 
 function handleTurnTransition() {
-  const nextIdx = (gameState.currentPlayerIndex + 1) % gameState.players.length;
-  const nextPlayer = gameState.players[nextIdx];
   if (gameState.mode === 'single' || isTutorialMode || gameState.mode === 'tutorial') {
     setTimeout(startTurn, 50);
-  } else {
-    renderAll();
+    return;
+  }
+
+  const nextIdx = (gameState.currentPlayerIndex + 1) % gameState.players.length;
+  const nextPlayer = gameState.players[nextIdx];
+  const label = nextPlayer.id === 'player1' ? 'Player 1' : 'Player 2';
+  document.getElementById('controls').style.display = 'none';
+  document.getElementById('draw-pile').classList.add('disabled');
+  document.getElementById('draw-pile').style.pointerEvents = 'none';
+  document.getElementById('draw-btn').disabled = true;
+
+  renderAll();
+  const playerHand = document.querySelector('#player-hand .tile-row');
+  const aiHand = document.getElementById('ai-hand');
+  const playerInfo = document.getElementById('player1-info');
+  const aiInfo = document.getElementById('player2-info');
+  const ww = window.innerWidth;
+
+  const flyOut = (el, tx) => {
+    if (!el) return Promise.resolve();
+    const rect = el.getBoundingClientRect();
+    const startX = rect.left;
+    return el.animate([
+      { transform: 'translateX(0)', opacity: 1 },
+      { transform: `translateX(${tx - startX}px)`, opacity: 0 }
+    ], { duration: 300, easing: 'ease-in', fill: 'forwards' }).finished;
+  };
+
+  isTransitioning = true;
+  SFX.whoosh();
+  Promise.all([
+    flyOut(playerHand, ww + 200),
+    flyOut(aiHand, -(ww + 200)),
+    flyOut(playerInfo, ww + 200),
+    flyOut(aiInfo, -(ww + 200))
+  ]).then(() => {
+    isTransitioning = false;
+    [playerHand, aiHand, playerInfo, aiInfo].forEach(el => {
+      if (el) { el.getAnimations().forEach(a => a.cancel()); el.style.transform = ''; el.style.opacity = ''; }
+    });
+
+    const hiddenStyle = document.createElement('style');
+    hiddenStyle.id = 'pass-hidden-style';
+    hiddenStyle.textContent = '#player-hand .tile-row,#ai-hand,#player1-info,#player2-info{opacity:0!important;transform:translateX(0)!important}';
+    document.head.appendChild(hiddenStyle);
+
     showMessage(`Pass the device to ${nextPlayer.id}`, 'info');
-    document.getElementById('controls').style.display = 'none';
 
     const passOverlay = document.createElement('div');
     passOverlay.id = 'pass-overlay';
     passOverlay.style.textAlign = 'center';
-    const label = nextPlayer.id === 'player1' ? 'Player 1' : 'Player 2';
     passOverlay.innerHTML = `
       <button id="pass-btn" style="margin:10px auto;padding:14px 38px;font-family:'Press Start 2P',monospace;font-size:0.78rem;text-transform:uppercase;border:none;color:#F3E9CA;cursor:pointer;background:url('assets/button.png') no-repeat center/100% 100%;text-shadow:2px 2px 0 rgba(0,0,0,0.5);letter-spacing:1px;transition:transform 0.1s,filter 0.1s">
         PASS TO ${label}
@@ -808,75 +853,63 @@ function handleTurnTransition() {
     const passBtn = document.getElementById('pass-btn');
     passBtn.addEventListener('click', () => {
       SFX.button();
-      passBtn.disabled = true;
+      isTransitioning = true;
       passBtn.style.pointerEvents = 'none';
-      gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
+      passOverlay.remove();
+      const hs = document.getElementById('pass-hidden-style');
+      if (hs) hs.remove();
+      document.getElementById('draw-pile').classList.remove('disabled');
+      document.getElementById('draw-pile').style.pointerEvents = '';
+      document.getElementById('draw-btn').disabled = false;
+      gameState.currentPlayerIndex = nextIdx;
+      document.getElementById('controls').style.display = '';
 
-      const playerHand = document.querySelector('#player-hand .tile-row');
-      const aiHand = document.getElementById('ai-hand');
-      const playerInfo = document.getElementById('player1-info');
-      const aiInfo = document.getElementById('player2-info');
+      const current = gameState.players[nextIdx];
+      pendingRack = JSON.parse(JSON.stringify(current.rack));
+      pendingBoard = JSON.parse(JSON.stringify(gameState.board));
+      originalRackIds = current.rack.map(t => t.id);
+      selectedTileIds = new Set();
+      selectedGroupIdx = -1;
+
+      renderAll();
+      updateFrozenState();
+
       const ww = window.innerWidth;
+      const newPlayerHand = document.querySelector('#player-hand .tile-row');
+      const newAiHand = document.getElementById('ai-hand');
+      const newPlayerInfo = document.getElementById('player1-info');
+      const newAiInfo = document.getElementById('player2-info');
 
-      const flyOut = (el, tx) => {
-        if (!el) return Promise.resolve();
-        const rect = el.getBoundingClientRect();
-        const startX = rect.left;
-        return el.animate([
-          { transform: 'translateX(0)', opacity: 1 },
-          { transform: `translateX(${tx - startX}px)`, opacity: 0 }
-        ], { duration: 300, easing: 'ease-in', fill: 'forwards' }).finished;
+      const flyIn = (el, fromX) => {
+        if (!el) return;
+        el.style.transform = `translateX(${fromX}px)`;
+        requestAnimationFrame(() => {
+          el.style.transition = 'transform 300ms ease-out, opacity 300ms ease-out';
+          el.style.transform = 'translateX(0)';
+          el.style.opacity = '1';
+        });
       };
 
-      SFX.whoosh();
-      Promise.all([
-        flyOut(playerHand, ww + 200),
-        flyOut(aiHand, -(ww + 200)),
-        flyOut(playerInfo, ww + 200),
-        flyOut(aiInfo, -(ww + 200))
-      ]).then(() => {
-        [playerHand, aiHand, playerInfo, aiInfo].forEach(el => {
-          if (el) { el.getAnimations().forEach(a => a.cancel()); el.style.transform = ''; el.style.opacity = ''; }
-        });
-
-        const hiddenStyle = document.createElement('style');
-        hiddenStyle.textContent = '#player-hand .tile-row,#ai-hand,#player1-info,#player2-info{opacity:0!important;transform:translateX(0)!important}';
-        document.head.appendChild(hiddenStyle);
-
-        startTurn();
-
-        const newPlayerHand = document.querySelector('#player-hand .tile-row');
-        const newAiHand = document.getElementById('ai-hand');
-        const newPlayerInfo = document.getElementById('player1-info');
-        const newAiInfo = document.getElementById('player2-info');
-
-        const flyIn = (el, fromX) => {
-          if (!el) return;
-          el.style.transform = `translateX(${fromX}px)`;
-          requestAnimationFrame(() => {
-            el.style.transition = 'transform 300ms ease-out, opacity 300ms ease-out';
-            el.style.transform = 'translateX(0)';
-            el.style.opacity = '1';
-            setTimeout(() => {
-              el.style.transition = '';
-              el.style.transform = '';
-              el.style.opacity = '';
-            }, 300);
-          });
-        };
-
+      requestAnimationFrame(() => {
+        if (newPlayerHand) newPlayerHand.style.transform = `translateX(${-(ww + 200)}px)`;
+        if (newAiHand) newAiHand.style.transform = `translateX(${ww + 200}px)`;
+        if (newPlayerInfo) newPlayerInfo.style.transform = `translateX(${-(ww + 200)}px)`;
+        if (newAiInfo) newAiInfo.style.transform = `translateX(${ww + 200}px)`;
         requestAnimationFrame(() => {
-          if (newPlayerHand) newPlayerHand.style.transform = `translateX(${-(ww + 200)}px)`;
-          if (newAiHand) newAiHand.style.transform = `translateX(${ww + 200}px)`;
-          if (newPlayerInfo) newPlayerInfo.style.transform = `translateX(${-(ww + 200)}px)`;
-          if (newAiInfo) newAiInfo.style.transform = `translateX(${ww + 200}px)`;
-          hiddenStyle.remove();
-          requestAnimationFrame(() => {
-            flyIn(newPlayerHand, -(ww + 200));
-            flyIn(newAiHand, ww + 200);
-            flyIn(newPlayerInfo, -(ww + 200));
-            flyIn(newAiInfo, ww + 200);
-          });
+          flyIn(newPlayerHand, -(ww + 200));
+          flyIn(newAiHand, ww + 200);
+          flyIn(newPlayerInfo, -(ww + 200));
+          flyIn(newAiInfo, ww + 200);
+          setTimeout(() => {
+            [newPlayerHand, newAiHand, newPlayerInfo, newAiInfo].forEach(el => {
+              if (el) { el.style.transition = ''; el.style.transform = ''; el.style.opacity = ''; }
+            });
+            isTransitioning = false;
+            awaitingPass = false;
+            isProcessing = false;
+            updateControls();
+            showMessage(`Your turn, ${current.id}!${current.hasMelded ? '' : ' (Need 30+ points for initial meld)'}`, 'info');
+          }, 350);
         });
       });
     });
@@ -894,11 +927,11 @@ function handleTurnTransition() {
     passBtn.addEventListener('mouseup', function() {
       this.style.transform = '';
     });
-  }
+  });
 }
 
 function cancelTurn() {
-  if (isProcessing) return;
+  if (isProcessing || awaitingPass) return;
   const player = gameState.players[gameState.currentPlayerIndex];
   pendingRack = JSON.parse(JSON.stringify(player.rack));
   pendingBoard = JSON.parse(JSON.stringify(gameState.board));
@@ -911,7 +944,7 @@ function cancelTurn() {
 }
 
 function drawAndSkip() {
-  if (isProcessing || isAnimatingDraw) return;
+  if (isProcessing || isTransitioning || awaitingPass || isAnimatingDraw) return;
 
   if (originalRackIds && originalRackIds.length > pendingRack.length) {
     showMessage('You have pending plays. Cancel or submit first.', 'error');
@@ -1232,6 +1265,9 @@ function renderGameInfo() {
   if (drawPile) {
     if (gameState.pool.length === 0) {
       drawPile.classList.add('disabled', 'empty');
+    } else if (awaitingPass) {
+      drawPile.classList.add('disabled');
+      drawPile.classList.remove('empty');
     } else {
       drawPile.classList.remove('disabled', 'empty');
     }
@@ -1383,10 +1419,18 @@ function createTileElement(tile, opts = {}) {
 }
 
 function updateControls() {
+  if (awaitingPass) {
+    document.getElementById('submit-btn').disabled = true;
+    document.getElementById('cancel-btn').disabled = true;
+    document.getElementById('draw-btn').disabled = true;
+    const dp = document.getElementById('draw-pile');
+    if (dp) dp.classList.add('disabled');
+    return;
+  }
   const hasPending = pendingRack && originalRackIds && (originalRackIds.length > pendingRack.length);
-  const drawDisabled = isProcessing || awaitingInitialMeld || awaitingJokerPlay;
-  document.getElementById('submit-btn').disabled = !hasPending || isProcessing || awaitingDraw;
-  document.getElementById('cancel-btn').disabled = !hasPending || isProcessing || awaitingDraw;
+  const drawDisabled = isProcessing || awaitingPass || awaitingInitialMeld || awaitingJokerPlay;
+  document.getElementById('submit-btn').disabled = !hasPending || isProcessing || awaitingPass || awaitingDraw;
+  document.getElementById('cancel-btn').disabled = !hasPending || isProcessing || awaitingPass || awaitingDraw;
   document.getElementById('draw-btn').disabled = drawDisabled;
   const drawPile = document.getElementById('draw-pile');
   if (drawPile) {
