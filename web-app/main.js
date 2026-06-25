@@ -1285,7 +1285,7 @@ function renderRack() {
 
 function renderPending() {
   const container = document.getElementById('pending-area');
-  container.style.display = 'none';
+  if (container) container.style.display = 'none';
 }
 
 function createTileElement(tile, opts = {}) {
