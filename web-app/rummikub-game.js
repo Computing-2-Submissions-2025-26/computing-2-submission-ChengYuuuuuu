@@ -3,9 +3,9 @@
  */
 
 let _nextId = 0;
-const COLORS = ['red', 'blue', 'yellow', 'black'];
-const INITIAL_MELD_SCORE = 30;
-const INITIAL_TILES = 14;
+export const COLORS = ['red', 'blue', 'yellow', 'black'];
+export const INITIAL_MELD_SCORE = 30;
+export const INITIAL_TILES = 14;
 
 function createTile(color, value, isJoker = false) {
   return { id: _nextId++, color, value, isJoker };
