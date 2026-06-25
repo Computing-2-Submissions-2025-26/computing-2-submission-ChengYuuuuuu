@@ -207,19 +207,57 @@ export function getJokerRepresentation(group) {
     const values = nonJokers.map(t => t.value).sort((a, b) => a - b);
     const min = values[0];
     const max = values[values.length - 1];
+    const numJokers = jokers.length;
 
-    for (let i = 0; i < values.length - 1; i++) {
-      if (values[i + 1] - values[i] === 2) {
-        return { color: nonJokers[0].color, value: values[i] + 1 };
+    if (numJokers === 1) {
+      const ji = group.findIndex(t => t.isJoker);
+      let leftVal = null;
+      for (let i = ji - 1; i >= 0; i--) {
+        if (!group[i].isJoker) { leftVal = group[i].value; break; }
       }
+      let rightVal = null;
+      for (let i = ji + 1; i < group.length; i++) {
+        if (!group[i].isJoker) { rightVal = group[i].value; break; }
+      }
+
+      if (leftVal !== null && rightVal !== null) {
+        if (rightVal - leftVal === 2) {
+          return { color: nonJokers[0].color, value: leftVal + 1 };
+        }
+        return null;
+      }
+      if (leftVal !== null) {
+        return { color: nonJokers[0].color, value: leftVal + 1 };
+      }
+      if (rightVal !== null) {
+        return { color: nonJokers[0].color, value: rightVal - 1 };
+      }
+      return null;
     }
 
-    const firstNonJokerIdx = group.findIndex(t => !t.isJoker);
-    const firstJokerIdx = group.findIndex(t => t.isJoker);
-    if (firstJokerIdx < firstNonJokerIdx) {
-      return { color: nonJokers[0].color, value: min - 1 };
+    let gaps = [];
+    for (let i = 0; i < values.length - 1; i++) {
+      const gap = values[i + 1] - values[i] - 1;
+      if (gap > 0) gaps.push({ from: values[i], to: values[i + 1], count: gap });
     }
-    return { color: nonJokers[0].color, value: max + 1 };
+
+    if (gaps.length === 1 && gaps[0].count >= 1) {
+      if (gaps[0].count <= numJokers) {
+        return { color: nonJokers[0].color, value: gaps[0].from + 1 };
+      }
+      return null;
+    }
+
+    if (gaps.length === 0) {
+      const firstJokerIdx = group.findIndex(t => t.isJoker);
+      const firstNonJokerIdx = group.findIndex(t => !t.isJoker);
+      if (firstJokerIdx < firstNonJokerIdx) {
+        return { color: nonJokers[0].color, value: min - 1 };
+      }
+      return { color: nonJokers[0].color, value: max + 1 };
+    }
+
+    return null;
   }
 
   return null;
@@ -307,14 +345,14 @@ export function makeMove(gameState, tilesToPlay, manipulatedGroups, jokerReplace
   }
 
   if (!player.hasMelded) {
-    const actualScore = manipulatedGroups.reduce((s, g) => s + groupScore(g), 0);
-    if (actualScore < INITIAL_MELD_SCORE) {
-      return { success: false, newState: state, errorMsg: `Initial meld needs at least ${INITIAL_MELD_SCORE} points (got ${actualScore})`, scoreDelta: 0 };
+    const playedScore = tilesToPlay.reduce((s, t) => s + tileValue(t), 0);
+    if (playedScore < INITIAL_MELD_SCORE) {
+      return { success: false, newState: state, errorMsg: `Initial meld needs at least ${INITIAL_MELD_SCORE} points from your hand (got ${playedScore})`, scoreDelta: 0 };
     }
     player.hasMelded = true;
   }
 
-  state.board = manipulatedGroups.map(g => sortGroup(g));
+  state.board = manipulatedGroups.map(g => [...g]);
 
   player.rack = removeTiles(player.rack, allFromHand);
   for (const joker of replacedJokers) {
@@ -434,8 +472,8 @@ function findExtensions(rack, board) {
  */
 function findCombinedMeld(groups) {
   const sorted = [...groups].sort((a, b) => {
-    const sa = groupScore(a);
-    const sb = groupScore(b);
+    const sa = a.reduce((s, t) => s + tileValue(t), 0);
+    const sb = b.reduce((s, t) => s + tileValue(t), 0);
     return sb - sa;
   });
 
@@ -456,7 +494,7 @@ function findCombinedMeld(groups) {
     backtrack(idx + 1, usedIds, curTiles, curGroups, curScore);
 
     const group = sorted[idx];
-    const gScore = groupScore(group);
+    const gScore = group.reduce((s, t) => s + tileValue(t), 0);
     const hasOverlap = group.some(t => usedIds.has(t.id));
     if (!hasOverlap) {
       const newIds = new Set(usedIds);
@@ -488,7 +526,7 @@ export function getValidMoves(gameState) {
 
   if (!player.hasMelded) {
     for (const group of newGroups) {
-      const score = groupScore(group);
+      const score = group.reduce((s, t) => s + tileValue(t), 0);
       if (score >= INITIAL_MELD_SCORE) {
         moves.push({ tilesToPlay: group, manipulatedGroups: [group], score });
       }
@@ -533,11 +571,16 @@ export function getAIMove(gameState) {
     return { action: 'draw', tilesToPlay: [], manipulatedGroups: [] };
   }
 
+  let chosen;
   if (gameState.difficulty === 'hard') {
-    const best = moves.reduce((a, b) => a.score > b.score ? a : (a.tilesToPlay.length > b.tilesToPlay.length ? a : b));
-    return { action: 'play', tilesToPlay: best.tilesToPlay, manipulatedGroups: best.manipulatedGroups };
+    chosen = moves.reduce((a, b) => a.score > b.score ? a : (a.tilesToPlay.length > b.tilesToPlay.length ? a : b));
+  } else {
+    chosen = moves[0];
   }
 
-  const move = moves[0];
-  return { action: 'play', tilesToPlay: move.tilesToPlay, manipulatedGroups: move.manipulatedGroups };
+  if (!chosen.tilesToPlay || chosen.tilesToPlay.length === 0) {
+    return { action: 'draw', tilesToPlay: [], manipulatedGroups: [] };
+  }
+
+  return { action: 'play', tilesToPlay: chosen.tilesToPlay, manipulatedGroups: chosen.manipulatedGroups.map(g => sortGroup(g)) };
 }

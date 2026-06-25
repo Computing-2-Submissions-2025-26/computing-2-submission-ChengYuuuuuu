@@ -239,14 +239,14 @@ function performGroupDrop(tileIds, sourceType, sourceGroupIdx, tiles, targetIdx,
   if (sourceType === 'board' && sourceGroupIdx === targetIdx) {
     const group = pendingBoard[sourceGroupIdx];
     const filtered = group.filter(t => !idSet.has(t.id));
-    pendingBoard[sourceGroupIdx] = sortGroup([...filtered.slice(0, insertAt), ...tiles, ...filtered.slice(insertAt)]);
+    pendingBoard[sourceGroupIdx] = [...filtered.slice(0, insertAt), ...tiles, ...filtered.slice(insertAt)];
     afterTileMove();
     return;
   }
 
-  commitTileMove(tileIds, sourceType, sourceGroupIdx, targetIdx, sortGroup(
+  commitTileMove(tileIds, sourceType, sourceGroupIdx, targetIdx,
     [...pendingBoard[targetIdx].slice(0, insertAt), ...tiles, ...pendingBoard[targetIdx].slice(insertAt)]
-  ));
+  );
 }
 
 function performNewGroupDrop(tileIds, sourceType, sourceGroupIdx, tiles) {
@@ -283,7 +283,7 @@ function commitTileMove(tileIds, sourceType, sourceGroupIdx, targetIdx, newTarge
 
 function afterTileMove(skipMsg = false) {
   SFX.place();
-  pendingBoard = pendingBoard.filter(g => g.length > 0).map(g => sortGroup(g));
+  pendingBoard = pendingBoard.filter(g => g.length > 0);
   selectedTileIds.clear();
   selectedGroupIdx = -1;
   updateControls();
@@ -566,7 +566,7 @@ function doAITurn() {
   try {
     const aiMove = getAIMove(gameState);
 
-    if (aiMove.action === 'draw') {
+    if (aiMove.action === 'draw' || !aiMove.tilesToPlay || aiMove.tilesToPlay.length === 0) {
       animateDraw(() => {
         showBarrage('SKIP', '#f39c12', 'top');
         const result = skipAndDraw(gameState);
@@ -688,6 +688,31 @@ function submitTurn() {
 
   const player = gameState.players[gameState.currentPlayerIndex];
   const manipulatedGroups = pendingBoard;
+
+  for (const group of manipulatedGroups) {
+    if (group.length < 3) continue;
+    const nonJokers = group.filter(t => !t.isJoker);
+    if (nonJokers.length === 0) continue;
+    const allSameColor = group.every(t => t.isJoker || t.color === nonJokers[0].color);
+    if (allSameColor) {
+      const njValSet = new Set(nonJokers.map(t => t.value));
+      let firstNJIdx = -1, firstNJVal = -1;
+      for (let i = 0; i < group.length; i++) {
+        if (!group[i].isJoker) { firstNJIdx = i; firstNJVal = group[i].value; break; }
+      }
+      const base = firstNJVal - firstNJIdx;
+      for (let i = 0; i < group.length; i++) {
+        const expected = base + i;
+        if (group[i].isJoker) {
+          if (njValSet.has(expected)) {
+            showMessage('Joker in an ambiguous position in a run', 'error'); return;
+          }
+        } else if (group[i].value !== expected) {
+          showMessage('Run groups must be in ascending order', 'error'); return;
+        }
+      }
+    }
+  }
 
   consecutiveEmptySkips = 0;
   const wasMelded = player.hasMelded;
@@ -1230,7 +1255,29 @@ function renderBoard() {
     const groupEl = document.createElement('div');
     groupEl.className = 'board-group';
     if (idx === selectedGroupIdx && !isAiTurn) groupEl.classList.add('selected');
-    const isValid = group.length < 3 ? false : isValidGroup(group);
+    const contentValid = group.length < 3 ? false : isValidGroup(group);
+    let orderValid = true;
+    if (contentValid && group.length >= 3) {
+      const nonJokers = group.filter(t => !t.isJoker);
+      const allSameColor = nonJokers.length > 0 && group.every(t => t.isJoker || t.color === nonJokers[0].color);
+      if (allSameColor) {
+        const njValSet = new Set(nonJokers.map(t => t.value));
+        let firstNJIdx = -1, firstNJVal = -1;
+        for (let i = 0; i < group.length; i++) {
+          if (!group[i].isJoker) { firstNJIdx = i; firstNJVal = group[i].value; break; }
+        }
+        const base = firstNJVal - firstNJIdx;
+        for (let i = 0; i < group.length; i++) {
+          const expected = base + i;
+          if (group[i].isJoker) {
+            if (njValSet.has(expected)) { orderValid = false; break; }
+          } else if (group[i].value !== expected) {
+            orderValid = false; break;
+          }
+        }
+      }
+    }
+    const isValid = contentValid && orderValid;
     if (!isValid && pendingBoard && !isAiTurn) groupEl.classList.add('invalid');
     groupEl.dataset.index = idx;
 
@@ -1326,7 +1373,7 @@ function createTileElement(tile, opts = {}) {
       const colorLabel = COLOR_LABELS[repr.color] || repr.color[0].toUpperCase();
       div.innerHTML = `<span class="tile-value"></span><span class="tile-sub">${colorLabel}${repr.value}</span>`;
     } else {
-      div.innerHTML = '<span class="tile-value"></span>';
+      div.innerHTML = '<span class="tile-value">?</span>';
     }
   } else {
     div.innerHTML = `<span class="tile-value">${tile.value}</span>`;
