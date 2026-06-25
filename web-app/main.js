@@ -566,7 +566,7 @@ function doAITurn() {
   try {
     const aiMove = getAIMove(gameState);
 
-    if (aiMove.action === 'draw') {
+    if (aiMove.action === 'draw' || !aiMove.tilesToPlay || aiMove.tilesToPlay.length === 0) {
       animateDraw(() => {
         showBarrage('SKIP', '#f39c12', 'top');
         const result = skipAndDraw(gameState);
@@ -577,9 +577,47 @@ function doAITurn() {
       return;
     }
 
-    const moveResult = makeMove(gameState, aiMove.tilesToPlay, aiMove.manipulatedGroups);
+    const tilesToPlay = aiMove.tilesToPlay || [];
+    const currentBoard = gameState.board;
+    let fixedGroups = currentBoard.map(g => [...g]);
+    const allBoardIds = new Set();
+    fixedGroups.forEach(g => g.forEach(t => allBoardIds.add(t.id)));
+    const newTiles = tilesToPlay.filter(t => !allBoardIds.has(t.id));
+
+    if (newTiles.length === 0) {
+      console.warn('AI: all tiles already on board, skipping');
+      const drawResult = skipAndDraw(gameState);
+      gameState = drawResult.newState;
+      isProcessing = false;
+      afterAITurn();
+      return;
+    }
+
+    if (isValidGroup(newTiles)) {
+      fixedGroups.push([...newTiles]);
+    } else {
+      let added = false;
+      for (let i = 0; i < fixedGroups.length; i++) {
+        if (isValidGroup([...fixedGroups[i], ...newTiles])) {
+          fixedGroups[i] = [...fixedGroups[i], ...newTiles];
+          added = true;
+          break;
+        }
+      }
+      if (!added) {
+        console.warn('AI: tiles cannot form valid group, skipping');
+        const drawResult = skipAndDraw(gameState);
+        gameState = drawResult.newState;
+        isProcessing = false;
+        afterAITurn();
+        return;
+      }
+    }
+
+    fixedGroups = fixedGroups.filter(g => g.length > 0);
+    const moveResult = makeMove(gameState, tilesToPlay, fixedGroups);
     if (moveResult.success) {
-      animateAIMove(aiMove.tilesToPlay, moveResult.newState);
+      animateAIMove(tilesToPlay, moveResult.newState);
     } else {
       console.error('AI move rejected:', moveResult.errorMsg);
       const drawResult = skipAndDraw(gameState);
@@ -1127,6 +1165,7 @@ function renderAIHand() {
 }
 
 function renderAll() {
+  if (!gameState) { console.warn('renderAll: gameState is null, skipping render'); return; }
   try { updateFrozenState(); } catch (e) { console.error('updateFrozenState error:', e); }
   try { renderGameInfo(); } catch (e) { console.error('renderGameInfo error:', e); }
   try { renderAIHand(); } catch (e) { console.error('renderAIHand error:', e); }
@@ -1336,6 +1375,7 @@ function createTileElement(tile, opts = {}) {
 }
 
 function updateControls() {
+  if (!gameState) return;
   const hasPending = pendingRack && originalRackIds && (originalRackIds.length > pendingRack.length);
   const drawDisabled = isProcessing || awaitingInitialMeld || awaitingJokerPlay;
   document.getElementById('submit-btn').disabled = !hasPending || isProcessing || awaitingDraw;

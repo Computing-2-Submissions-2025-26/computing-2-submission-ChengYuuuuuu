@@ -340,8 +340,13 @@ export function makeMove(gameState, tilesToPlay, manipulatedGroups, jokerReplace
     expectedIds.add(id);
   }
 
-  if (expectedIds.size !== newIds.size || ![...expectedIds].every(id => newIds.has(id))) {
-    return { success: false, newState: state, errorMsg: 'Board tile mismatch', scoreDelta: 0 };
+  if (expectedIds.size !== newIds.size) {
+    return { success: false, newState: state, errorMsg: `Board tile mismatch: expected ${expectedIds.size} tiles, got ${newIds.size}`, scoreDelta: 0 };
+  }
+  for (const id of expectedIds) {
+    if (!newIds.has(id)) {
+      return { success: false, newState: state, errorMsg: `Board tile mismatch: tile ${id} missing from result`, scoreDelta: 0 };
+    }
   }
 
   if (!player.hasMelded) {
@@ -455,11 +460,15 @@ function findValidGroups(rack) {
 function findExtensions(rack, board) {
   const exts = [];
   for (let gi = 0; gi < board.length; gi++) {
+    const originalGroup = board[gi];
     for (const tile of rack) {
-      const testGroup = [...board[gi], tile];
+      const testGroup = [...originalGroup, tile];
       if (isValidGroup(testGroup)) {
-        const newBoard = board.map((g, i) => i === gi ? testGroup : g);
-        exts.push({ tile, groupIndex: gi, newBoard });
+        const newBoard = [];
+        for (let i = 0; i < board.length; i++) {
+          newBoard.push(i === gi ? [...testGroup] : [...board[i]]);
+        }
+        exts.push({ tiles: [tile], groupIndex: gi, newBoard });
       }
     }
   }
@@ -549,8 +558,8 @@ export function getValidMoves(gameState) {
 
     const exts = findExtensions(rack, board);
     for (const ext of exts) {
-      const score = tileValue(ext.tile);
-      moves.push({ tilesToPlay: [ext.tile], manipulatedGroups: ext.newBoard, score });
+      const score = ext.tiles.reduce((s, t) => s + tileValue(t), 0);
+      moves.push({ tilesToPlay: ext.tiles, manipulatedGroups: ext.newBoard, score });
     }
   }
 
