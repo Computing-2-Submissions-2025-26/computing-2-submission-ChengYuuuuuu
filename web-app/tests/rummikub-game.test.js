@@ -1,5 +1,6 @@
 import * as game from '../rummikub-game.js';
 import assert from 'assert';
+import { describe, it } from 'node:test';
 
 describe('initGame', () => {
   it('should initialize a single-player game with correct state', () => {
@@ -416,6 +417,226 @@ describe('makeMove - board manipulation', () => {
     const result = game.makeMove(state, [], [[g1[2], g1[1], g1[0]]]);
     assert.strictEqual(result.success, false);
     assert.ok(result.errorMsg.includes('play at least one tile'));
+  });
+});
+
+describe('getJokerRepresentation - ambiguous positions', () => {
+  function tile(color, value) { return { id: 0, color, value, isJoker: false }; }
+  function joker() { return { id: 0, color: null, value: null, isJoker: true }; }
+
+  it('should return null for joker between two consecutive values ([10, ?, 11])', () => {
+    const rep = game.getJokerRepresentation([tile('red', 10), joker(), tile('red', 11)]);
+    assert.strictEqual(rep, null);
+  });
+
+  it('should return null for group with only jokers', () => {
+    assert.strictEqual(game.getJokerRepresentation([joker(), joker(), joker()]), null);
+  });
+
+  it('should return null for group with fewer than 3 tiles', () => {
+    assert.strictEqual(game.getJokerRepresentation([tile('red', 5), joker()]), null);
+  });
+
+  it('should determine joker in middle of run with gap of 2 ([10, ?, 12])', () => {
+    const rep = game.getJokerRepresentation([tile('red', 10), joker(), tile('red', 12)]);
+    assert.deepStrictEqual(rep, { color: 'red', value: 11 });
+  });
+
+  it('should return null for non-array input', () => {
+    assert.strictEqual(game.getJokerRepresentation(null), null);
+    assert.strictEqual(game.getJokerRepresentation(undefined), null);
+  });
+
+  it('should handle joker at start of run with two non-jokers', () => {
+    const rep = game.getJokerRepresentation([joker(), tile('blue', 10), tile('blue', 11)]);
+    assert.deepStrictEqual(rep, { color: 'blue', value: 9 });
+  });
+
+  it('should handle joker at end of run with two non-jokers', () => {
+    const rep = game.getJokerRepresentation([tile('blue', 10), tile('blue', 11), joker()]);
+    assert.deepStrictEqual(rep, { color: 'blue', value: 12 });
+  });
+
+  it('should determine joker in run with gap of 2 even with extra tiles ([10, ?, 12, 13])', () => {
+    const rep = game.getJokerRepresentation([tile('red', 10), joker(), tile('red', 12), tile('red', 13)]);
+    assert.deepStrictEqual(rep, { color: 'red', value: 11 });
+  });
+});
+
+describe('makeMove - edge cases', () => {
+  it('should reject empty tilesToPlay with error message', () => {
+    const state = game.initGame('twoPlayer', null);
+    const result = game.makeMove(state, [], [[]]);
+    assert.strictEqual(result.success, false);
+    assert.ok(result.errorMsg);
+  });
+
+  it('should reject joker replacement before initial meld', () => {
+    const state = game.initGame('twoPlayer', null);
+    const player = state.players[0];
+    const jokerTile = { id: 100, color: null, value: null, isJoker: true };
+    state.board = [[{ id: 1, color: 'red', value: 3, isJoker: false }, jokerTile, { id: 2, color: 'red', value: 5, isJoker: false }]];
+    const repTile = player.rack[0]; repTile.color = 'red'; repTile.value = 4;
+    const newGroup = [state.board[0][0], repTile, state.board[0][2]];
+    const result = game.makeMove(state, [player.rack[1], player.rack[2], player.rack[3]], [newGroup, [player.rack[1], player.rack[2], player.rack[3]]], [{ jokerId: 100, replacementTile: repTile }]);
+    assert.strictEqual(result.success, false);
+    assert.ok(result.errorMsg.includes('Cannot replace jokers before initial meld'));
+  });
+
+  it('should reject move with duplicate tile IDs across groups', () => {
+    const state = game.initGame('twoPlayer', null);
+    const player = state.players[0];
+    player.hasMelded = true;
+    const t = player.rack[0]; t.color = 'red'; t.value = 5;
+    const t2 = player.rack[1]; t2.color = 'red'; t2.value = 6;
+    const t3 = player.rack[2]; t3.color = 'red'; t3.value = 7;
+    const result = game.makeMove(state, [t, t2, t3], [[t, t2], [t, t3]]);
+    assert.strictEqual(result.success, false);
+  });
+});
+
+describe('checkWin - edge cases', () => {
+  it('should return AI player ID when AI has empty rack', () => {
+    const state = game.initGame('single', 'normal');
+    state.players[1].rack = [];
+    assert.strictEqual(game.checkWin(state), 'AI');
+  });
+
+  it('should return player2 ID in two-player mode', () => {
+    const state = game.initGame('twoPlayer', null);
+    state.players[1].rack = [];
+    assert.strictEqual(game.checkWin(state), 'player2');
+  });
+
+  it('should return false when both players still have tiles', () => {
+    const state = game.initGame('twoPlayer', null);
+    assert.strictEqual(game.checkWin(state), false);
+  });
+
+  it('should return player1 when only player1 has empty rack', () => {
+    const state = game.initGame('twoPlayer', null);
+    state.players[0].rack = [];
+    state.players[1].rack = [{ id: 1, color: 'red', value: 1, isJoker: false }];
+    assert.strictEqual(game.checkWin(state), 'player1');
+  });
+});
+
+describe('skipAndDraw - edge cases', () => {
+  it('should draw last tile from pool and advance turn', () => {
+    const state = game.initGame('twoPlayer', null);
+    state.pool = [{ id: 999, color: 'red', value: 5, isJoker: false }];
+    const result = game.skipAndDraw(state);
+    assert.ok(result.drawnTile);
+    assert.strictEqual(result.newState.pool.length, 0);
+  });
+
+  it('should return drawnTile null when pool is already empty', () => {
+    const state = game.initGame('twoPlayer', null);
+    state.pool = [];
+    const result = game.skipAndDraw(state);
+    assert.strictEqual(result.drawnTile, null);
+  });
+});
+
+describe('getValidMoves - initial meld', () => {
+  it('should find moves meeting 30-point initial meld requirement', () => {
+    const state = game.initGame('single', 'normal');
+    const player = state.players[0];
+    player.rack[0].color = 'red'; player.rack[0].value = 10;
+    player.rack[1].color = 'red'; player.rack[1].value = 11;
+    player.rack[2].color = 'red'; player.rack[2].value = 12;
+    const moves = game.getValidMoves(state);
+    assert.ok(moves.length > 0);
+    assert.ok(moves.every(m => m.score >= 30));
+  });
+
+  it('should return empty array when no tiles meet 30-point threshold', () => {
+    const state = game.initGame('single', 'normal');
+    const player = state.players[0];
+    player.rack[0].color = 'red'; player.rack[0].value = 1;
+    player.rack[1].color = 'red'; player.rack[1].value = 2;
+    player.rack[2].color = 'red'; player.rack[2].value = 3;
+    const moves = game.getValidMoves(state);
+    assert.strictEqual(moves.length, 0);
+  });
+});
+
+describe('getValidMoves - extensions after melding', () => {
+  it('should find extension moves to existing board groups', () => {
+    const state = game.initGame('single', 'normal');
+    const player = state.players[0];
+    player.hasMelded = true;
+    const g1 = [player.rack[0], player.rack[1], player.rack[2]];
+    g1[0].color = 'red'; g1[0].value = 5;
+    g1[1].color = 'red'; g1[1].value = 6;
+    g1[2].color = 'red'; g1[2].value = 7;
+    state.board = [g1];
+    const extTile = player.rack[3]; extTile.color = 'red'; extTile.value = 8;
+    const moves = game.getValidMoves(state);
+    const exts = moves.filter(m => m.tilesToPlay.length === 1);
+    assert.ok(exts.length > 0);
+  });
+});
+
+describe('getAIMove - difficulty selection', () => {
+  it('should pick highest-score move on hard difficulty', () => {
+    const state = game.initGame('single', 'hard');
+    state.currentPlayerIndex = 1;
+    const ai = state.players[1];
+    ai.hasMelded = true;
+    ai.rack[0].color = 'red'; ai.rack[0].value = 10;
+    ai.rack[1].color = 'red'; ai.rack[1].value = 11;
+    ai.rack[2].color = 'red'; ai.rack[2].value = 12;
+    ai.rack[3].color = 'blue'; ai.rack[3].value = 1;
+    ai.rack[4].color = 'blue'; ai.rack[4].value = 2;
+    ai.rack[5].color = 'blue'; ai.rack[5].value = 3;
+    const move = game.getAIMove(state);
+    if (move.action === 'play') {
+      const score = move.tilesToPlay.reduce((s, t) => s + (t.isJoker ? 30 : t.value), 0);
+      assert.ok(score > 0);
+    }
+  });
+
+  it('should return draw when AI has no tiles', () => {
+    const state = game.initGame('single', 'hard');
+    state.currentPlayerIndex = 1;
+    state.players[1].rack = [];
+    const move = game.getAIMove(state);
+    assert.strictEqual(move.action, 'draw');
+  });
+
+  it('should return draw when mode is not single', () => {
+    const state = game.initGame('twoPlayer', null);
+    state.currentPlayerIndex = 1;
+    const move = game.getAIMove(state);
+    assert.strictEqual(move.action, 'none');
+  });
+});
+
+describe('sortGroup', () => {
+  function tile(color, value) { return { id: 0, color, value, isJoker: false }; }
+  function joker() { return { id: 0, color: null, value: null, isJoker: true }; }
+
+  it('should sort a run group by value ascending', () => {
+    const group = [tile('red', 8), tile('red', 6), tile('red', 7)];
+    const sorted = game.sortGroup(group);
+    assert.strictEqual(sorted[0].value, 6);
+    assert.strictEqual(sorted[1].value, 7);
+    assert.strictEqual(sorted[2].value, 8);
+  });
+
+  it('should sort a set group by color order (red, blue, yellow, black)', () => {
+    const group = [tile('yellow', 5), tile('red', 5), tile('blue', 5)];
+    const sorted = game.sortGroup(group);
+    assert.strictEqual(sorted[0].color, 'red');
+    assert.strictEqual(sorted[1].color, 'blue');
+    assert.strictEqual(sorted[2].color, 'yellow');
+  });
+
+  it('should place jokers at the end of a sorted group', () => {
+    const group = [joker(), tile('red', 5), tile('red', 6)];
+    const sorted = game.sortGroup(group);
+    assert.strictEqual(sorted[sorted.length - 1].isJoker, true);
   });
 });
 
