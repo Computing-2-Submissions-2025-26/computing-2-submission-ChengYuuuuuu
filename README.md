@@ -1,148 +1,53 @@
-# Rummikub — Tile Game
+[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/H6lPFq0J)
+# Computing 2 Coursework Submission.
+**CID**: 02586056
 
-A web-based Rummikub game built for the Computing 2 Applications coursework. Play in single-player mode against an AI opponent or pass-and-play with a friend.
+This is the submission template for your Computing 2 Applications coursework submission.
 
-Rummikub is a tile-rummy game where each player starts with 14 tiles. On your turn, you may play tiles to the table in valid **runs** (three or more consecutive numbers in the same colour) or **groups** (three or four identical numbers in different colours). The first player to empty their rack wins.
-
----
-
-## Features
-
-- Full Rummikub rule enforcement: runs, groups, joker tiles, initial meld (≥30 points)
-- Board manipulation: rearrange, split, extend existing groups on the table
-- Joker replacement: swap a joker on the board with a matching tile from your hand
-- AI opponent with Normal and Hard difficulty
-- Two-player hot-seat mode with screen-swap animation
-- Drag-and-drop tile interface
-- Pixel-art themed UI with custom tile sprites
-- Interactive tutorial for new players
-- 53 unit tests covering core game logic
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Frontend | HTML5, CSS3, JavaScript (ES6+) |
-| Modularity | ES6 `import` / `export` |
-| Game Engine | Pure JavaScript module (`rummikub-game.js`) |
-| Documentation | JSDoc |
-| Testing | Node.js native test runner (`node:test` + `node:assert`) |
-| Package Manager | npm |
-
----
-
-## Project Structure
-
-```
-/
-├── package.json
-├── jsdoc.json
-├── README.md
-└── web-app/
-    ├── index.html
-    ├── default.css
-    ├── rummikub-game.js          # Game engine (JSDoc annotated)
-    ├── main.js                   # UI logic & event handlers
-    ├── ramda.js                  # Ramda ES module shim
-    ├── assets/                   # Images, sprites, audio
-    │   ├── game_background.png
-    │   ├── frozen_background.png
-    │   ├── tile_red.png
-    │   ├── tile_blue.png
-    │   ├── tile_yellow.png
-    │   ├── tile_white.png
-    │   ├── tile_joker.png
-    │   ├── tile_back.png
-    │   ├── board.png
-    │   ├── button.png
-    │   ├── cover_background.png
-    │   ├── title.png
-    │   └── 30_欢乐斗地主背景音乐.mp3
-    └── tests/
-        ├── spec.md               # Test specification (Chinese)
-        ├── rummikub-game.test.js  # Original Mocha tests
-        └── rummikub.test.js       # 53 node:test unit tests
-```
-
----
-
-## Installation & Usage
-
-```bash
-# Install dependencies
+## Checklist
+### Install dependencies locally
+This template relies on a a few packages from the Node Package Manager, npm.
+To install them run the following commands in the terminal.
+```properties
 npm install
-
-# Run unit tests
-npm test
-
-# Generate JSDoc documentation
-npm run docs
-
-# Serve the game locally
-npx http-server web-app -p 8080 -o
-# or: cd web-app && python -m http.server 8080
-# then open http://localhost:8080
 ```
+These won't be uploaded to your repository because of the `.gitignore`.
+I'll run the same commands when I download your repos.
 
----
+### Game Module – API
+*You will produce an API specification, i.e. a list of function names and their signatures, for a Javascript module that represents the state of your game and the operations you can perform on it that advances the game or provides information.*
 
-## Core API
+- [ ] Include a `.js ` module file in `/web-app` containing the API using `jsdoc`.
+- [ ] Update `/jsdoc.json` to point to this module in `.source.include` (line 7)
+- [ ] Compile jsdoc using the run configuration `Generate Docs`
+- [ ] Check the generated docs have compiled correctly.
 
-All functions are exported from `web-app/rummikub-game.js`.
+### Game Module – Implementation
+*You will implement, in Javascript, the module you specified above. Such that your game can be simulated in code, e.g. in the debug console.*
 
-| Function | Description |
-|---|---|
-| `initGame(mode, difficulty)` | Initialise a new game state (single or twoPlayer) |
-| `isValidGroup(group)` | Validate a set of tiles as a legal run or group |
-| `sortGroup(group)` | Sort a group by value or colour order |
-| `getJokerRepresentation(group)` | Determine what a joker represents in context |
-| `makeMove(state, tiles, groups, replacements)` | Execute a player's move |
-| `skipAndDraw(state)` | Draw a tile and advance the turn |
-| `checkWin(state)` | Check whether any player has won |
-| `getValidMoves(state)` | List all legal moves for the current player |
-| `getAIMove(state)` | AI decision-making (single-player only) |
+- [ ] The file above should be fully implemented.
 
-Generate full API docs:
+### Unit Tests – Specification
+*For the Game module API you have produced, write a set of unit tests descriptions that specify the expected behaviour of one aspect of your API, e.g. you might pick the win condition, or how the state changes when a move is made.*
 
-```bash
-npx jsdoc -c jsdoc.json
-```
+- [ ] Write unit test definitions in `/web-app/tests`.
+- [ ] Check the headings appear in the Testing sidebar.
 
----
+### Unit Tests – Implementation
+*Implement in code the unit tests specified above.*
 
-## Test Summary
+- [ ] Implement the tests above.
 
-53 test cases across 9 groups:
+### Web Application
+*Produce a web application that allows a user to interface with your game module.*
 
-| Group | Tests | Coverage |
-|---|---|---|
-| `initGame` | 4 | Initialisation, tile counts, ID uniqueness |
-| `isValidGroup` | 17 | Runs, sets, jokers, edge cases |
-| `sortGroup` | 4 | Ordering by value/colour, joker placement |
-| `getJokerRepresentation` | 6 | Joker substitution |
-| `makeMove` | 10 | Play, initial meld, extensions, joker replacement |
-| `skipAndDraw` | 3 | Draw, empty pool, immutability |
-| `checkWin` | 4 | Win detection for all players |
-| `getValidMoves` | 2 | Move generation |
-| `getAIMove` | 2 | AI draw vs play decisions |
+- Implement in `/web-app`
+  - [ ] `index.html`
+  - [ ] `default.css`
+  - [ ] `main.js`
+  - [ ] Any other files you need to include.
 
----
-
-## Coursework Checklist
-
-- [x] Game module API specification (JSDoc)
-- [x] Game module implementation
-- [x] Unit test specification (`tests/spec.md`)
-- [x] Unit test implementation (`tests/rummikub.test.js`)
-- [x] Web application (`index.html`, `default.css`, `main.js`)
-
----
-
-## Author
-
-
-Name: Chengyu Wang
-
-CID: 02586056
+### Finally
+- [ ] Push to GitHub.
+- [ ] Sync the changes.
+- [ ] Check submission on GitHub website.

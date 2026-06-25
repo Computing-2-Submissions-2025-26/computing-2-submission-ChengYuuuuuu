@@ -442,6 +442,10 @@ function startTurn() {
 
   const passOverlay = document.getElementById('pass-overlay');
   if (passOverlay) passOverlay.remove();
+  const drawPileEl = document.getElementById('draw-pile');
+  if (drawPileEl) drawPileEl.classList.remove('disabled');
+  const pileOverlay = document.getElementById('draw-pile-overlay');
+  if (pileOverlay) pileOverlay.remove();
   document.getElementById('controls').style.display = '';
 
   const current = gameState.players[gameState.currentPlayerIndex];
@@ -803,58 +807,70 @@ function handleTurnTransition() {
     showMessage(`Pass the device to ${nextPlayer.id}`, 'info');
     document.getElementById('controls').style.display = 'none';
 
-    const passOverlay = document.createElement('div');
-    passOverlay.id = 'pass-overlay';
-    passOverlay.style.textAlign = 'center';
-    const label = nextPlayer.id === 'player1' ? 'Player 1' : 'Player 2';
-    passOverlay.innerHTML = `
-      <button id="pass-btn" style="margin:10px auto;padding:14px 38px;font-family:'Press Start 2P',monospace;font-size:0.78rem;text-transform:uppercase;border:none;color:#F3E9CA;cursor:pointer;background:url('assets/button.png') no-repeat center/100% 100%;text-shadow:2px 2px 0 rgba(0,0,0,0.5);letter-spacing:1px;transition:transform 0.1s,filter 0.1s">
-        PASS TO ${label}
-      </button>`;
-    const playerArea = document.getElementById('player-area');
-    if (playerArea) {
-      playerArea.parentNode.insertBefore(passOverlay, playerArea);
-    } else {
-      document.getElementById('game-screen').appendChild(passOverlay);
-    }
+    const playerHand = document.querySelector('#player-hand .tile-row');
+    const aiHand = document.getElementById('ai-hand');
+    const playerInfo = document.getElementById('player1-info');
+    const aiInfo = document.getElementById('player2-info');
+    const ww = window.innerWidth;
 
-    const passBtn = document.getElementById('pass-btn');
-    passBtn.addEventListener('click', () => {
-      SFX.button();
-      passBtn.disabled = true;
-      passBtn.style.pointerEvents = 'none';
-      gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
+    const flyOut = (el, tx) => {
+      if (!el) return Promise.resolve();
+      const rect = el.getBoundingClientRect();
+      const startX = rect.left;
+      return el.animate([
+        { transform: 'translateX(0)', opacity: 1 },
+        { transform: `translateX(${tx - startX}px)`, opacity: 0 }
+      ], { duration: 300, easing: 'ease-in', fill: 'forwards' }).finished;
+    };
 
-      const playerHand = document.querySelector('#player-hand .tile-row');
-      const aiHand = document.getElementById('ai-hand');
-      const playerInfo = document.getElementById('player1-info');
-      const aiInfo = document.getElementById('player2-info');
-      const ww = window.innerWidth;
+    SFX.whoosh();
+    Promise.all([
+      flyOut(playerHand, ww + 200),
+      flyOut(aiHand, -(ww + 200)),
+      flyOut(playerInfo, ww + 200),
+      flyOut(aiInfo, -(ww + 200))
+    ]).then(() => {
+      [playerHand, aiHand, playerInfo, aiInfo].forEach(el => {
+        if (el) { el.getAnimations().forEach(a => a.cancel()); el.style.transform = ''; el.style.opacity = ''; }
+      });
 
-      const flyOut = (el, tx) => {
-        if (!el) return Promise.resolve();
-        const rect = el.getBoundingClientRect();
-        const startX = rect.left;
-        return el.animate([
-          { transform: 'translateX(0)', opacity: 1 },
-          { transform: `translateX(${tx - startX}px)`, opacity: 0 }
-        ], { duration: 300, easing: 'ease-in', fill: 'forwards' }).finished;
-      };
+      const hiddenStyle = document.createElement('style');
+      hiddenStyle.textContent = '#player-hand .tile-row,#ai-hand,#player1-info,#player2-info{opacity:0!important;transform:translateX(0)!important}';
+      document.head.appendChild(hiddenStyle);
 
-      SFX.whoosh();
-      Promise.all([
-        flyOut(playerHand, ww + 200),
-        flyOut(aiHand, -(ww + 200)),
-        flyOut(playerInfo, ww + 200),
-        flyOut(aiInfo, -(ww + 200))
-      ]).then(() => {
-        [playerHand, aiHand, playerInfo, aiInfo].forEach(el => {
-          if (el) { el.getAnimations().forEach(a => a.cancel()); el.style.transform = ''; el.style.opacity = ''; }
-        });
+      const drawPile = document.getElementById('draw-pile');
+      if (drawPile) drawPile.classList.add('disabled');
+      const pileContainer = document.getElementById('draw-pile-container');
+      if (pileContainer) {
+        if (!document.getElementById('draw-pile-overlay')) {
+          const pileOverlay = document.createElement('div');
+          pileOverlay.id = 'draw-pile-overlay';
+          pileContainer.appendChild(pileOverlay);
+        }
+      }
 
-        const hiddenStyle = document.createElement('style');
-        hiddenStyle.textContent = '#player-hand .tile-row,#ai-hand,#player1-info,#player2-info{opacity:0!important;transform:translateX(0)!important}';
-        document.head.appendChild(hiddenStyle);
+      const passOverlay = document.createElement('div');
+      passOverlay.id = 'pass-overlay';
+      passOverlay.style.textAlign = 'center';
+      const label = nextPlayer.id === 'player1' ? 'Player 1' : 'Player 2';
+      passOverlay.innerHTML = `
+        <button id="pass-btn" style="margin:10px auto;padding:14px 38px;font-family:'Press Start 2P',monospace;font-size:0.78rem;text-transform:uppercase;border:none;color:#F3E9CA;cursor:pointer;background:url('assets/button.png') no-repeat center/100% 100%;text-shadow:2px 2px 0 rgba(0,0,0,0.5);letter-spacing:1px;transition:transform 0.1s,filter 0.1s">
+          PASS TO ${label}
+        </button>`;
+      const playerArea = document.getElementById('player-area');
+      if (playerArea) {
+        playerArea.parentNode.insertBefore(passOverlay, playerArea);
+      } else {
+        document.getElementById('game-screen').appendChild(passOverlay);
+      }
+
+      const passBtn = document.getElementById('pass-btn');
+      passBtn.addEventListener('click', () => {
+        SFX.button();
+        passOverlay.remove();
+        passBtn.disabled = true;
+        passBtn.style.pointerEvents = 'none';
+        gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
 
         startTurn();
 
@@ -892,20 +908,20 @@ function handleTurnTransition() {
           });
         });
       });
-    });
-    passBtn.addEventListener('mouseover', function() {
-      this.style.transform = 'scale(1.03)';
-      this.style.filter = 'brightness(1.2)';
-    });
-    passBtn.addEventListener('mouseout', function() {
-      this.style.transform = '';
-      this.style.filter = '';
-    });
-    passBtn.addEventListener('mousedown', function() {
-      this.style.transform = 'scale(0.97)';
-    });
-    passBtn.addEventListener('mouseup', function() {
-      this.style.transform = '';
+      passBtn.addEventListener('mouseover', function() {
+        this.style.transform = 'scale(1.03)';
+        this.style.filter = 'brightness(1.2)';
+      });
+      passBtn.addEventListener('mouseout', function() {
+        this.style.transform = '';
+        this.style.filter = '';
+      });
+      passBtn.addEventListener('mousedown', function() {
+        this.style.transform = 'scale(0.97)';
+      });
+      passBtn.addEventListener('mouseup', function() {
+        this.style.transform = '';
+      });
     });
   }
 }

@@ -552,6 +552,15 @@ body {
   transform: none;
 }
 
+#draw-pile-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  pointer-events: auto;
+}
+
 .pile-stack {
   position: relative;
   width: 58px;
