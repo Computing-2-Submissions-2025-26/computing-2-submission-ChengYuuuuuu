@@ -553,9 +553,14 @@ describe('getValidMoves - initial meld', () => {
   it('should return empty array when no tiles meet 30-point threshold', () => {
     const state = game.initGame('single', 'normal');
     const player = state.players[0];
-    player.rack[0].color = 'red'; player.rack[0].value = 1;
-    player.rack[1].color = 'red'; player.rack[1].value = 2;
-    player.rack[2].color = 'red'; player.rack[2].value = 3;
+    player.rack = [
+      { id: 1, color: 'red', value: 1, isJoker: false },
+      { id: 2, color: 'blue', value: 1, isJoker: false },
+      { id: 3, color: 'yellow', value: 1, isJoker: false },
+      { id: 4, color: 'red', value: 2, isJoker: false },
+      { id: 5, color: 'blue', value: 2, isJoker: false },
+      { id: 6, color: 'yellow', value: 2, isJoker: false },
+    ];
     const moves = game.getValidMoves(state);
     assert.strictEqual(moves.length, 0);
   });
