@@ -1,154 +1,6 @@
-import { initGame, makeMove, skipAndDraw, checkWin, isValidGroup, getAIMove, getJokerRepresentation, sortGroup, COLORS, INITIAL_MELD_SCORE, INITIAL_TILES } from './rummikub-game.js';
+import { initGame, makeMove, skipAndDraw, checkWin, isValidGroup, getAIMove, getJokerRepresentation, sortGroup } from './rummikub-game.js';
 
 const COLOR_LABELS = { red: 'R', blue: 'B', yellow: 'Y', black: 'K' };
-
-// ── Animation Durations ──
-const ANIM = {
-  FLY_OUT: 300,
-  FLY_IN: 300,
-  FLY_IN_CLEANUP_DELAY: 350,
-  AI_TURN_DELAY: 600,
-  AI_THINK_DELAY: 400,
-  TURN_START_DELAY: 50,
-  TURN_START_FALLBACK: 100,
-  DRAW_CARD: 500,
-  AI_MOVE_SLIDE: 500,
-  AI_MOVE_FADE: 500,
-  AI_MOVE_CLEANUP: 500,
-  DRAW_PILE_RESET: 200,
-  CONFETTI_DELAY_BASE: 1000,
-  CONFETTI_DURATION_BASE: 1500,
-  BARRAGE_REMOVE: 1500,
-  POOL_EMPTY_GAMEOVER: 1500,
-  TUTORIAL_START_DELAY: 200,
-  MESSAGE_AUTO_HIDE: 3000,
-};
-
-// ── DOM Element IDs ──
-const ID = {
-  GAME_SCREEN: 'game-screen',
-  START_SCREEN: 'start-screen',
-  GAMEOVER_SCREEN: 'gameover-screen',
-  BOARD_GROUPS: 'board-groups',
-  RACK_TILES: 'rack-tiles',
-  PLAYER_HAND: 'player-hand',
-  AI_HAND: 'ai-hand',
-  PLAYER1_INFO: 'player1-info',
-  PLAYER2_INFO: 'player2-info',
-  PASS_OVERLAY: 'pass-overlay',
-  PASS_BTN: 'pass-btn',
-  PASS_HIDDEN_STYLE: 'pass-hidden-style',
-  PLAYER_AREA: 'player-area',
-  CONTROLS: 'controls',
-  SUBMIT_BTN: 'submit-btn',
-  CANCEL_BTN: 'cancel-btn',
-  DRAW_BTN: 'draw-btn',
-  DRAW_PILE: 'draw-pile',
-  TURN_INDICATOR: 'turn-indicator',
-  COUNT_P1: 'count-p1',
-  COUNT_P2: 'count-p2',
-  AVATAR_P1: 'avatar-p1',
-  AVATAR_P2: 'avatar-p2',
-  NAME_P1: 'name-p1',
-  NAME_P2: 'name-p2',
-  MELD_STATUS: 'meld-status',
-  POOL_INFO: 'pool-info',
-  PILE_COUNT: 'pile-count',
-  WINNER_TEXT: 'winner-text',
-  MUSIC_BTN: 'music-btn',
-  NEW_GAME_BTN: 'new-game-btn',
-  PLAY_AGAIN_BTN: 'play-again-btn',
-  TUTORIAL_OVERLAY: 'tutorial-overlay',
-  TUTORIAL_DIALOG: 'tutorial-dialog',
-  TUTORIAL_EMOJI: 'tutorial-emoji',
-  TUTORIAL_TEXT: 'tutorial-text',
-  TUTORIAL_AVATAR: 'tutorial-avatar',
-  TUTORIAL_TILE_GRID: 'tutorial-tile-grid',
-  TUTORIAL_CONTENT: 'tutorial-content',
-  TUTORIAL_BUTTONS: 'tutorial-buttons',
-  MESSAGE_AREA: 'message-area',
-  PENDING_AREA: 'pending-area',
-  BGM: 'bgm',
-};
-
-// ── CSS Class Names ──
-const CLASS = {
-  DISABLED: 'disabled',
-  EMPTY: 'empty',
-  SELECTED: 'selected',
-  INVALID: 'invalid',
-  TILE_NEW: 'tile-new',
-  ACTIVE: 'active',
-  FROZEN: 'frozen',
-  DRAGGING: 'dragging',
-  DROP_VALID: 'drop-valid',
-  DROP_INVALID: 'drop-invalid',
-  DRAG_ACTIVE: 'drag-active',
-  DRAG_OVER_RACK: 'drag-over-rack',
-  BOARD_GROUP: 'board-group',
-  BOARD_EMPTY: 'board-empty',
-  TILE: 'tile',
-  TILE_ROW: 'tile-row',
-  TILE_VALUE: 'tile-value',
-  TILE_SUB: 'tile-sub',
-  JOKER: 'joker',
-  FLYING_CARD: 'flying-card',
-  PIXEL_CONFETTI: 'pixel-confetti',
-  BARRAGE_OVERLAY: 'barrage-overlay',
-  BARRAGE_TEXT: 'barrage-text',
-  AI_HAND_TILE: 'ai-hand-tile',
-  HAS_SPOTLIGHT: 'has-spotlight',
-  BOING: 'boing',
-  TUTORIAL_TILE_STEP: 'tutorial-tile-step',
-  JOKER_FOCUS: 'joker-focus',
-  AVATAR_OPPONENT: 'avatar-opponent',
-  SUCCESS: 'success',
-  ERROR: 'error',
-  INFO: 'info',
-};
-
-// ── Animation / Layout Offsets ──
-const LAYOUT = {
-  FLY_OFFSET: 200,
-  DRAW_CARD_OFFSET_X: 24,
-  DRAW_CARD_OFFSET_Y: 32,
-  DRAW_CARD_OFFSET_RIGHT: 48,
-  DRAW_PILE_SCALE_DOWN: 0.95,
-  DRAW_PILE_SCALE_OVER: 1.05,
-  BTN_HOVER_SCALE: 1.03,
-  BTN_PRESS_SCALE: 0.97,
-  BTN_HOVER_BRIGHTNESS: 1.2,
-  CONFETTI_COUNT: 60,
-  CONFETTI_SIZE_MIN: 4,
-  CONFETTI_SIZE_RANDOM: 4,
-};
-
-// ── Message / UI Text ──
-const MSG = {
-  TILE_PLAYED: 'Tile played',
-  TILE_MOVED: 'Tile moved',
-  TILE_RETURNED: 'Tile returned to rack',
-  NO_TILES_TO_PLAY: 'No tiles to play or replace',
-  TURN_CANCELLED: 'Turn cancelled',
-  PENDING_PLAYS: 'You have pending plays. Cancel or submit first.',
-  COMPLETE_MOVE_FIRST: 'Complete the required move first!',
-  DREW_AND_SKIPPED: 'Drew a tile and skipped',
-  AI_ERROR: 'AI encountered an error and will skip',
-  NO_TILES_ON_BOARD: 'No tiles on the board yet',
-  NO_TILES: 'No tiles',
-  JOKER_AMBIGUOUS: 'Joker in an ambiguous position in a run',
-  RUN_ORDER: 'Run groups must be in ascending order',
-};
-
-// ── Confetti Colors ──
-const CONFETTI_COLORS = ['#e74c3c', '#3498db', '#f1c40f', '#2ecc71', '#9b59b6', '#e67e22'];
-
-// ── Emoji to Asset Map ──
-const EMOJI_ASSETS = { '😊': 'normal', '🥳': 'happy', '😮': 'surprised', '🤔': 'thinking' };
-
-// ── Player/Mode Identifiers ──
-const PLAYER = { P1: 'player1', P2: 'player2', AI: 'AI' };
-const MODE = { SINGLE: 'single', TWO_PLAYER: 'twoPlayer', TUTORIAL: 'tutorial' };
 
 let gameState = null;
 let pendingRack = null;
@@ -167,8 +19,6 @@ let showAIPlayComplete = false;
 let awaitingDraw = false;
 let awaitingJokerPlay = false;
 let isAnimatingDraw = false;
-let isTransitioning = false;
-let awaitingPass = false;
 let _justDrewTileId = null;
 
 const bgm = document.getElementById('bgm');
@@ -177,7 +27,7 @@ let musicOn = false;
 
 function toggleMusic() {
   musicOn = !musicOn;
-  const btn = document.getElementById(ID.MUSIC_BTN);
+  const btn = document.getElementById('music-btn');
   if (btn) btn.textContent = musicOn ? '🔊 Music' : '🔇 Music';
   if (musicOn) bgm.play();
   else bgm.pause();
@@ -186,7 +36,7 @@ function toggleMusic() {
 function stopMusic() {
   bgm.pause();
   musicOn = false;
-  const btn = document.getElementById(ID.MUSIC_BTN);
+  const btn = document.getElementById('music-btn');
   if (btn) btn.textContent = '🔇 Music';
 }
 
@@ -195,20 +45,20 @@ showStartScreen();
 
 bgm.play().then(() => {
   musicOn = true;
-  const btn = document.getElementById(ID.MUSIC_BTN);
+  const btn = document.getElementById('music-btn');
   if (btn) btn.textContent = '🔊 Music';
 }).catch(() => {});
 
 function showStartScreen() {
   stopMusic();
   hideAllScreens();
-  document.getElementById(ID.START_SCREEN).style.display = 'block';
+  document.getElementById('start-screen').style.display = 'block';
 }
 
 function hideAllScreens() {
-  document.getElementById(ID.START_SCREEN).style.display = 'none';
-  document.getElementById(ID.GAME_SCREEN).style.display = 'none';
-  document.getElementById(ID.GAMEOVER_SCREEN).style.display = 'none';
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'none';
+  document.getElementById('gameover-screen').style.display = 'none';
 }
 
 function setupEventListeners() {
@@ -222,17 +72,17 @@ function setupEventListeners() {
     startGame(mode, difficulty);
   });
 
-  document.getElementById(ID.NEW_GAME_BTN).addEventListener('click', () => { SFX.button(); showStartScreen(); });
-  document.getElementById(ID.PLAY_AGAIN_BTN).addEventListener('click', () => { SFX.button(); showStartScreen(); });
+  document.getElementById('new-game-btn').addEventListener('click', () => { SFX.button(); showStartScreen(); });
+  document.getElementById('play-again-btn').addEventListener('click', () => { SFX.button(); showStartScreen(); });
 
-  document.getElementById(ID.MUSIC_BTN).addEventListener('click', () => { SFX.button(); toggleMusic(); });
+  document.getElementById('music-btn').addEventListener('click', () => { SFX.button(); toggleMusic(); });
 
-  document.getElementById(ID.SUBMIT_BTN).addEventListener('click', () => { SFX.button(); submitTurn(); });
-  document.getElementById(ID.CANCEL_BTN).addEventListener('click', () => { SFX.button(); cancelTurn(); });
-  document.getElementById(ID.DRAW_BTN).addEventListener('click', () => { SFX.button(); drawAndSkip(); });
-  document.getElementById(ID.DRAW_PILE).addEventListener('click', () => { SFX.button(); drawAndSkip(); });
+  document.getElementById('submit-btn').addEventListener('click', () => { SFX.button(); submitTurn(); });
+  document.getElementById('cancel-btn').addEventListener('click', () => { SFX.button(); cancelTurn(); });
+  document.getElementById('draw-btn').addEventListener('click', () => { SFX.button(); drawAndSkip(); });
+  document.getElementById('draw-pile').addEventListener('click', () => { SFX.button(); drawAndSkip(); });
 
-  document.getElementById(ID.BOARD_GROUPS).addEventListener('click', e => {
+  document.getElementById('board-groups').addEventListener('click', e => {
     const groupEl = e.target.closest('.board-group');
     if (!groupEl) return;
     const idx = parseInt(groupEl.dataset.index, 10);
@@ -241,7 +91,7 @@ function setupEventListeners() {
     }
   });
 
-  document.getElementById(ID.RACK_TILES).addEventListener('click', e => {
+  document.getElementById('rack-tiles').addEventListener('click', e => {
     const tileEl = e.target.closest('.tile');
     if (!tileEl) return;
     const id = parseInt(tileEl.dataset.id, 10);
@@ -253,20 +103,20 @@ function setupEventListeners() {
   // Drag and drop event delegation
   document.addEventListener('dragstart', handleDragStart);
   document.addEventListener('dragend', handleDragEnd);
-  document.getElementById(ID.BOARD_GROUPS).addEventListener('dragover', handleDragOver);
-  document.getElementById(ID.BOARD_GROUPS).addEventListener('drop', handleBoardDrop);
-  document.getElementById(ID.BOARD_GROUPS).addEventListener('dragenter', handleGroupDragEnter);
-  document.getElementById(ID.BOARD_GROUPS).addEventListener('dragleave', handleGroupDragLeave);
-  document.getElementById(ID.RACK_TILES).addEventListener('dragover', handleDragOver);
-  document.getElementById(ID.RACK_TILES).addEventListener('drop', handleRackDrop);
-  document.getElementById(ID.RACK_TILES).addEventListener('dragenter', () => {
+  document.getElementById('board-groups').addEventListener('dragover', handleDragOver);
+  document.getElementById('board-groups').addEventListener('drop', handleBoardDrop);
+  document.getElementById('board-groups').addEventListener('dragenter', handleGroupDragEnter);
+  document.getElementById('board-groups').addEventListener('dragleave', handleGroupDragLeave);
+  document.getElementById('rack-tiles').addEventListener('dragover', handleDragOver);
+  document.getElementById('rack-tiles').addEventListener('drop', handleRackDrop);
+  document.getElementById('rack-tiles').addEventListener('dragenter', () => {
     if (dragData && dragData.sourceType === 'board') {
-      document.getElementById(ID.RACK_TILES).classList.add('drag-over-rack');
+      document.getElementById('rack-tiles').classList.add('drag-over-rack');
     }
   });
-  document.getElementById(ID.RACK_TILES).addEventListener('dragleave', e => {
-    if (e.target === document.getElementById(ID.RACK_TILES) || !e.currentTarget.contains(e.relatedTarget)) {
-      document.getElementById(ID.RACK_TILES).classList.remove('drag-over-rack');
+  document.getElementById('rack-tiles').addEventListener('dragleave', e => {
+    if (e.target === document.getElementById('rack-tiles') || !e.currentTarget.contains(e.relatedTarget)) {
+      document.getElementById('rack-tiles').classList.remove('drag-over-rack');
     }
   });
 }
@@ -302,7 +152,7 @@ function trySnapToGroup(group, tile) {
 
 function handleDragStart(e) {
   const tileEl = e.target.closest('.tile');
-  if (!tileEl || isProcessing || awaitingPass) return;
+  if (!tileEl || isProcessing) return;
   const tileId = parseInt(tileEl.dataset.id, 10);
   if (isNaN(tileId)) return;
 
@@ -334,7 +184,7 @@ function handleDragStart(e) {
 
   e.dataTransfer.effectAllowed = 'move';
   tileEl.classList.add('dragging');
-  document.getElementById(ID.BOARD_GROUPS).classList.add('drag-active');
+  document.getElementById('board-groups').classList.add('drag-active');
 }
 
 function handleDragEnd() {
@@ -342,8 +192,8 @@ function handleDragEnd() {
   document.querySelectorAll('.board-group.drop-valid, .board-group.drop-invalid').forEach(el => {
     el.classList.remove('drop-valid', 'drop-invalid');
   });
-  document.getElementById(ID.BOARD_GROUPS).classList.remove('drag-active');
-  document.getElementById(ID.RACK_TILES).classList.remove('drag-over-rack');
+  document.getElementById('board-groups').classList.remove('drag-active');
+  document.getElementById('rack-tiles').classList.remove('drag-over-rack');
   dragData = null;
 }
 
@@ -370,7 +220,7 @@ function handleDragOver(e) {
 
 function handleBoardDrop(e) {
   e.preventDefault();
-  if (!dragData || awaitingPass) return;
+  if (!dragData) return;
   const { tileIds, tiles, sourceType, sourceGroupIdx } = dragData;
 
   const groupEl = e.target.closest('.board-group');
@@ -379,7 +229,7 @@ function handleBoardDrop(e) {
     if (isNaN(targetIdx)) return;
     const insertAt = getInsertIndex(groupEl, e.clientX);
     performGroupDrop(tileIds, sourceType, sourceGroupIdx, tiles, targetIdx, insertAt);
-  } else if (e.currentTarget === document.getElementById(ID.BOARD_GROUPS)) {
+  } else if (e.currentTarget === document.getElementById('board-groups')) {
     performNewGroupDrop(tileIds, sourceType, sourceGroupIdx, tiles);
   }
 }
@@ -389,14 +239,14 @@ function performGroupDrop(tileIds, sourceType, sourceGroupIdx, tiles, targetIdx,
   if (sourceType === 'board' && sourceGroupIdx === targetIdx) {
     const group = pendingBoard[sourceGroupIdx];
     const filtered = group.filter(t => !idSet.has(t.id));
-    pendingBoard[sourceGroupIdx] = [...filtered.slice(0, insertAt), ...tiles, ...filtered.slice(insertAt)];
+    pendingBoard[sourceGroupIdx] = sortGroup([...filtered.slice(0, insertAt), ...tiles, ...filtered.slice(insertAt)]);
     afterTileMove();
     return;
   }
 
-  commitTileMove(tileIds, sourceType, sourceGroupIdx, targetIdx,
+  commitTileMove(tileIds, sourceType, sourceGroupIdx, targetIdx, sortGroup(
     [...pendingBoard[targetIdx].slice(0, insertAt), ...tiles, ...pendingBoard[targetIdx].slice(insertAt)]
-  );
+  ));
 }
 
 function performNewGroupDrop(tileIds, sourceType, sourceGroupIdx, tiles) {
@@ -433,14 +283,14 @@ function commitTileMove(tileIds, sourceType, sourceGroupIdx, targetIdx, newTarge
 
 function afterTileMove(skipMsg = false) {
   SFX.place();
-  pendingBoard = pendingBoard.filter(g => g.length > 0);
+  pendingBoard = pendingBoard.filter(g => g.length > 0).map(g => sortGroup(g));
   selectedTileIds.clear();
   selectedGroupIdx = -1;
   updateControls();
   renderAll();
   if (dragData && !skipMsg) {
     const msg = dragData.sourceType === 'rack' ? 'Tile played' : 'Tile moved';
-    showMessage(msg, CLASS.SUCCESS);
+    showMessage(msg, 'success');
   }
   dragData = null;
 
@@ -458,7 +308,7 @@ function afterTileMove(skipMsg = false) {
 
 function handleRackDrop(e) {
   e.preventDefault();
-  if (!dragData || awaitingPass) return;
+  if (!dragData) return;
   const { tileIds, tiles, sourceType, sourceGroupIdx } = dragData;
   if (sourceType !== 'board' || sourceGroupIdx < 0) return;
 
@@ -533,7 +383,7 @@ function startTutorialGame() {
   const pool = allTiles.filter(t => !usedIds.has(t.id));
 
   gameState = {
-    mode: MODE.TUTORIAL,
+    mode: 'tutorial',
     difficulty: null,
     players: [
       { id: 'player1', rack: humanTiles, hasMelded: false },
@@ -548,8 +398,8 @@ function startTutorialGame() {
   };
 
   hideAllScreens();
-  document.getElementById(ID.GAME_SCREEN).style.display = 'flex';
-  document.getElementById(ID.GAMEOVER_SCREEN).style.display = 'none';
+  document.getElementById('game-screen').style.display = 'flex';
+  document.getElementById('gameover-screen').style.display = 'none';
   selectedTileIds = new Set();
   selectedGroupIdx = -1;
   isProcessing = false;
@@ -560,8 +410,8 @@ function startTutorialGame() {
 function startGame(mode, difficulty) {
   gameState = initGame(mode, difficulty);
   hideAllScreens();
-  document.getElementById(ID.GAME_SCREEN).style.display = 'flex';
-  document.getElementById(ID.GAMEOVER_SCREEN).style.display = 'none';
+  document.getElementById('game-screen').style.display = 'flex';
+  document.getElementById('gameover-screen').style.display = 'none';
   selectedTileIds = new Set();
   selectedGroupIdx = -1;
   isProcessing = false;
@@ -573,7 +423,7 @@ function startTurn() {
   const player = gameState.players[gameState.currentPlayerIndex];
   if (!player) return;
 
-  if (player.id === PLAYER.AI) {
+  if (player.id === 'AI') {
     isProcessing = true;
     renderAll();
     if (isTutorialMode) {
@@ -590,9 +440,9 @@ function startTurn() {
   originalRackIds = null;
   dragData = null;
 
-  const passOverlay = document.getElementById(ID.PASS_OVERLAY);
+  const passOverlay = document.getElementById('pass-overlay');
   if (passOverlay) passOverlay.remove();
-  document.getElementById(ID.CONTROLS).style.display = '';
+  document.getElementById('controls').style.display = '';
 
   const current = gameState.players[gameState.currentPlayerIndex];
   pendingRack = JSON.parse(JSON.stringify(current.rack));
@@ -621,8 +471,8 @@ function afterAITurn() {
 
   if (isTutorialMode && showAIPlayComplete) {
     showAIPlayComplete = false;
-    const overlay = document.getElementById(ID.TUTORIAL_OVERLAY);
-    overlay.classList.add(CLASS.ACTIVE);
+    const overlay = document.getElementById('tutorial-overlay');
+    overlay.classList.add('active');
     tutorialQueue = [...tutorialNo];
     tutorialStep = 6;
     showTutorialStep();
@@ -716,7 +566,7 @@ function doAITurn() {
   try {
     const aiMove = getAIMove(gameState);
 
-    if (aiMove.action === 'draw' || !aiMove.tilesToPlay || aiMove.tilesToPlay.length === 0) {
+    if (aiMove.action === 'draw') {
       animateDraw(() => {
         showBarrage('SKIP', '#f39c12', 'top');
         const result = skipAndDraw(gameState);
@@ -799,7 +649,7 @@ function getCurrentPlayer() {
 }
 
 function toggleTileSelection(id) {
-  if (isProcessing || awaitingPass) return;
+  if (isProcessing) return;
   SFX.click();
   if (selectedTileIds.has(id)) {
     selectedTileIds.delete(id);
@@ -811,7 +661,7 @@ function toggleTileSelection(id) {
 }
 
 function selectBoardGroup(idx) {
-  if (isProcessing || awaitingPass) return;
+  if (isProcessing) return;
   if (selectedGroupIdx === idx) {
     selectedGroupIdx = -1;
   } else {
@@ -822,7 +672,7 @@ function selectBoardGroup(idx) {
 }
 
 function submitTurn() {
-  if (isProcessing || awaitingPass) return;
+  if (isProcessing) return;
 
   const playedIds = originalRackIds.filter(id => !pendingRack.some(t => t.id === id));
   const tilesToPlay = playedIds
@@ -839,31 +689,6 @@ function submitTurn() {
   const player = gameState.players[gameState.currentPlayerIndex];
   const manipulatedGroups = pendingBoard;
 
-  for (const group of manipulatedGroups) {
-    if (group.length < 3) continue;
-    const nonJokers = group.filter(t => !t.isJoker);
-    if (nonJokers.length === 0) continue;
-    const allSameColor = group.every(t => t.isJoker || t.color === nonJokers[0].color);
-    if (allSameColor) {
-      const njValSet = new Set(nonJokers.map(t => t.value));
-      let firstNJIdx = -1, firstNJVal = -1;
-      for (let i = 0; i < group.length; i++) {
-        if (!group[i].isJoker) { firstNJIdx = i; firstNJVal = group[i].value; break; }
-      }
-      const base = firstNJVal - firstNJIdx;
-      for (let i = 0; i < group.length; i++) {
-        const expected = base + i;
-        if (group[i].isJoker) {
-          if (njValSet.has(expected)) {
-            showMessage('Joker in an ambiguous position in a run', 'error'); return;
-          }
-        } else if (group[i].value !== expected) {
-          showMessage('Run groups must be in ascending order', 'error'); return;
-        }
-      }
-    }
-  }
-
   consecutiveEmptySkips = 0;
   const wasMelded = player.hasMelded;
   const playerIdx = gameState.currentPlayerIndex;
@@ -876,11 +701,8 @@ function submitTurn() {
   }
 
   gameState = result.newState;
-  if (gameState.mode === MODE.TWO_PLAYER) {
+  if (gameState.mode === 'twoPlayer') {
     gameState.currentPlayerIndex = playerIdx;
-    isProcessing = true;
-    awaitingPass = true;
-    updateControls();
   }
   if (!wasMelded && gameState.players[playerIdx].hasMelded) {
     showThawAnimation();
@@ -894,9 +716,9 @@ function submitTurn() {
 
   if (isTutorialMode && awaitingJokerPlay) {
     awaitingJokerPlay = false;
-    document.getElementById(ID.DRAW_BTN).disabled = false;
-    const overlay = document.getElementById(ID.TUTORIAL_OVERLAY);
-    overlay.classList.add(CLASS.ACTIVE);
+    document.getElementById('draw-btn').disabled = false;
+    const overlay = document.getElementById('tutorial-overlay');
+    overlay.classList.add('active');
     tutorialQueue = [...tutorialNo];
     tutorialStep = 11;
     showTutorialStep();
@@ -915,9 +737,9 @@ function submitTurn() {
 
   if (isTutorialMode && awaitingInitialMeld) {
     awaitingInitialMeld = false;
-    document.getElementById(ID.DRAW_BTN).disabled = false;
-    const overlay = document.getElementById(ID.TUTORIAL_OVERLAY);
-    overlay.classList.add(CLASS.ACTIVE);
+    document.getElementById('draw-btn').disabled = false;
+    const overlay = document.getElementById('tutorial-overlay');
+    overlay.classList.add('active');
     tutorialQueue = [...tutorialNo];
     tutorialStep = 5;
     showTutorialStep();
@@ -934,130 +756,102 @@ function submitTurn() {
 }
 
 function handleTurnTransition() {
-  if (gameState.mode === MODE.SINGLE || isTutorialMode || gameState.mode === MODE.TUTORIAL) {
-    setTimeout(startTurn, 50);
-    return;
-  }
-
   const nextIdx = (gameState.currentPlayerIndex + 1) % gameState.players.length;
   const nextPlayer = gameState.players[nextIdx];
-  const label = nextPlayer.id === PLAYER.P1 ? 'Player 1' : 'Player 2';
-  document.getElementById(ID.CONTROLS).style.display = 'none';
-  document.getElementById(ID.DRAW_PILE).classList.add(CLASS.DISABLED);
-  document.getElementById(ID.DRAW_PILE).style.pointerEvents = 'none';
-  document.getElementById(ID.DRAW_BTN).disabled = true;
-
-  renderAll();
-  const playerHand = document.querySelector('#player-hand .tile-row');
-  const aiHand = document.getElementById('ai-hand');
-  const playerInfo = document.getElementById('player1-info');
-  const aiInfo = document.getElementById('player2-info');
-  const ww = window.innerWidth;
-
-  const flyOut = (el, tx) => {
-    if (!el) return Promise.resolve();
-    const rect = el.getBoundingClientRect();
-    const startX = rect.left;
-    return el.animate([
-      { transform: 'translateX(0)', opacity: 1 },
-      { transform: `translateX(${tx - startX}px)`, opacity: 0 }
-    ], { duration: 300, easing: 'ease-in', fill: 'forwards' }).finished;
-  };
-
-  isTransitioning = true;
-  SFX.whoosh();
-  Promise.all([
-    flyOut(playerHand, ww + 200),
-    flyOut(aiHand, -(ww + 200)),
-    flyOut(playerInfo, ww + 200),
-    flyOut(aiInfo, -(ww + 200))
-  ]).then(() => {
-    isTransitioning = false;
-    [playerHand, aiHand, playerInfo, aiInfo].forEach(el => {
-      if (el) { el.getAnimations().forEach(a => a.cancel()); el.style.transform = ''; el.style.opacity = ''; }
-    });
-
-    const hiddenStyle = document.createElement('style');
-    hiddenStyle.id = 'pass-hidden-style';
-    hiddenStyle.textContent = '#player-hand .tile-row,#ai-hand,#player1-info,#player2-info{opacity:0!important;transform:translateX(0)!important}';
-    document.head.appendChild(hiddenStyle);
-
+  if (gameState.mode === 'single' || isTutorialMode || gameState.mode === 'tutorial') {
+    setTimeout(startTurn, 50);
+  } else {
+    renderAll();
     showMessage(`Pass the device to ${nextPlayer.id}`, 'info');
+    document.getElementById('controls').style.display = 'none';
 
     const passOverlay = document.createElement('div');
     passOverlay.id = 'pass-overlay';
     passOverlay.style.textAlign = 'center';
+    const label = nextPlayer.id === 'player1' ? 'Player 1' : 'Player 2';
     passOverlay.innerHTML = `
       <button id="pass-btn" style="margin:10px auto;padding:14px 38px;font-family:'Press Start 2P',monospace;font-size:0.78rem;text-transform:uppercase;border:none;color:#F3E9CA;cursor:pointer;background:url('assets/button.png') no-repeat center/100% 100%;text-shadow:2px 2px 0 rgba(0,0,0,0.5);letter-spacing:1px;transition:transform 0.1s,filter 0.1s">
         PASS TO ${label}
       </button>`;
-    const playerArea = document.getElementById(ID.PLAYER_AREA);
+    const playerArea = document.getElementById('player-area');
     if (playerArea) {
       playerArea.parentNode.insertBefore(passOverlay, playerArea);
     } else {
-      document.getElementById(ID.GAME_SCREEN).appendChild(passOverlay);
+      document.getElementById('game-screen').appendChild(passOverlay);
     }
 
-    const passBtn = document.getElementById(ID.PASS_BTN);
+    const passBtn = document.getElementById('pass-btn');
     passBtn.addEventListener('click', () => {
       SFX.button();
-      isTransitioning = true;
+      passBtn.disabled = true;
       passBtn.style.pointerEvents = 'none';
-      passOverlay.remove();
-      const hs = document.getElementById(ID.PASS_HIDDEN_STYLE);
-      if (hs) hs.remove();
-      document.getElementById(ID.DRAW_PILE).classList.remove(CLASS.DISABLED);
-      document.getElementById(ID.DRAW_PILE).style.pointerEvents = '';
-      document.getElementById(ID.DRAW_BTN).disabled = false;
-      gameState.currentPlayerIndex = nextIdx;
-      document.getElementById(ID.CONTROLS).style.display = '';
+      gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
 
-      const current = gameState.players[nextIdx];
-      pendingRack = JSON.parse(JSON.stringify(current.rack));
-      pendingBoard = JSON.parse(JSON.stringify(gameState.board));
-      originalRackIds = current.rack.map(t => t.id);
-      selectedTileIds = new Set();
-      selectedGroupIdx = -1;
-
-      renderAll();
-      updateFrozenState();
-
+      const playerHand = document.querySelector('#player-hand .tile-row');
+      const aiHand = document.getElementById('ai-hand');
+      const playerInfo = document.getElementById('player1-info');
+      const aiInfo = document.getElementById('player2-info');
       const ww = window.innerWidth;
-      const newPlayerHand = document.querySelector('#player-hand .tile-row');
-      const newAiHand = document.getElementById('ai-hand');
-      const newPlayerInfo = document.getElementById('player1-info');
-      const newAiInfo = document.getElementById('player2-info');
 
-      const flyIn = (el, fromX) => {
-        if (!el) return;
-        el.style.transform = `translateX(${fromX}px)`;
-        requestAnimationFrame(() => {
-          el.style.transition = 'transform 300ms ease-out, opacity 300ms ease-out';
-          el.style.transform = 'translateX(0)';
-          el.style.opacity = '1';
-        });
+      const flyOut = (el, tx) => {
+        if (!el) return Promise.resolve();
+        const rect = el.getBoundingClientRect();
+        const startX = rect.left;
+        return el.animate([
+          { transform: 'translateX(0)', opacity: 1 },
+          { transform: `translateX(${tx - startX}px)`, opacity: 0 }
+        ], { duration: 300, easing: 'ease-in', fill: 'forwards' }).finished;
       };
 
-      requestAnimationFrame(() => {
-        if (newPlayerHand) newPlayerHand.style.transform = `translateX(${-(ww + 200)}px)`;
-        if (newAiHand) newAiHand.style.transform = `translateX(${ww + 200}px)`;
-        if (newPlayerInfo) newPlayerInfo.style.transform = `translateX(${-(ww + 200)}px)`;
-        if (newAiInfo) newAiInfo.style.transform = `translateX(${ww + 200}px)`;
+      SFX.whoosh();
+      Promise.all([
+        flyOut(playerHand, ww + 200),
+        flyOut(aiHand, -(ww + 200)),
+        flyOut(playerInfo, ww + 200),
+        flyOut(aiInfo, -(ww + 200))
+      ]).then(() => {
+        [playerHand, aiHand, playerInfo, aiInfo].forEach(el => {
+          if (el) { el.getAnimations().forEach(a => a.cancel()); el.style.transform = ''; el.style.opacity = ''; }
+        });
+
+        const hiddenStyle = document.createElement('style');
+        hiddenStyle.textContent = '#player-hand .tile-row,#ai-hand,#player1-info,#player2-info{opacity:0!important;transform:translateX(0)!important}';
+        document.head.appendChild(hiddenStyle);
+
+        startTurn();
+
+        const newPlayerHand = document.querySelector('#player-hand .tile-row');
+        const newAiHand = document.getElementById('ai-hand');
+        const newPlayerInfo = document.getElementById('player1-info');
+        const newAiInfo = document.getElementById('player2-info');
+
+        const flyIn = (el, fromX) => {
+          if (!el) return;
+          el.style.transform = `translateX(${fromX}px)`;
+          requestAnimationFrame(() => {
+            el.style.transition = 'transform 300ms ease-out, opacity 300ms ease-out';
+            el.style.transform = 'translateX(0)';
+            el.style.opacity = '1';
+            setTimeout(() => {
+              el.style.transition = '';
+              el.style.transform = '';
+              el.style.opacity = '';
+            }, 300);
+          });
+        };
+
         requestAnimationFrame(() => {
-          flyIn(newPlayerHand, -(ww + 200));
-          flyIn(newAiHand, ww + 200);
-          flyIn(newPlayerInfo, -(ww + 200));
-          flyIn(newAiInfo, ww + 200);
-          setTimeout(() => {
-            [newPlayerHand, newAiHand, newPlayerInfo, newAiInfo].forEach(el => {
-              if (el) { el.style.transition = ''; el.style.transform = ''; el.style.opacity = ''; }
-            });
-            isTransitioning = false;
-            awaitingPass = false;
-            isProcessing = false;
-            updateControls();
-            showMessage(`Your turn, ${current.id}!${current.hasMelded ? '' : ' (Need 30+ points for initial meld)'}`, 'info');
-          }, 350);
+          if (newPlayerHand) newPlayerHand.style.transform = `translateX(${-(ww + 200)}px)`;
+          if (newAiHand) newAiHand.style.transform = `translateX(${ww + 200}px)`;
+          if (newPlayerInfo) newPlayerInfo.style.transform = `translateX(${-(ww + 200)}px)`;
+          if (newAiInfo) newAiInfo.style.transform = `translateX(${ww + 200}px)`;
+          hiddenStyle.remove();
+          requestAnimationFrame(() => {
+            flyIn(newPlayerHand, -(ww + 200));
+            flyIn(newAiHand, ww + 200);
+            flyIn(newPlayerInfo, -(ww + 200));
+            flyIn(newAiInfo, ww + 200);
+          });
         });
       });
     });
@@ -1075,11 +869,11 @@ function handleTurnTransition() {
     passBtn.addEventListener('mouseup', function() {
       this.style.transform = '';
     });
-  });
+  }
 }
 
 function cancelTurn() {
-  if (isProcessing || awaitingPass) return;
+  if (isProcessing) return;
   const player = gameState.players[gameState.currentPlayerIndex];
   pendingRack = JSON.parse(JSON.stringify(player.rack));
   pendingBoard = JSON.parse(JSON.stringify(gameState.board));
@@ -1092,7 +886,7 @@ function cancelTurn() {
 }
 
 function drawAndSkip() {
-  if (isProcessing || isTransitioning || awaitingPass || isAnimatingDraw) return;
+  if (isProcessing || isAnimatingDraw) return;
 
   if (originalRackIds && originalRackIds.length > pendingRack.length) {
     showMessage('You have pending plays. Cancel or submit first.', 'error');
@@ -1110,8 +904,8 @@ function drawAndSkip() {
     }
   }
 
-  const pile = document.getElementById(ID.DRAW_PILE);
-  if (pile.classList.contains(CLASS.DISABLED)) return;
+  const pile = document.getElementById('draw-pile');
+  if (pile.classList.contains('disabled')) return;
 
   if (isTutorialMode && tutorialGameStep === 3) {
     const state = JSON.parse(JSON.stringify(gameState));
@@ -1133,8 +927,8 @@ function drawAndSkip() {
 
     if (awaitingDraw) {
       awaitingDraw = false;
-      const overlay = document.getElementById(ID.TUTORIAL_OVERLAY);
-      overlay.classList.add(CLASS.ACTIVE);
+      const overlay = document.getElementById('tutorial-overlay');
+      overlay.classList.add('active');
       tutorialQueue = [...tutorialNo];
       tutorialStep = 10;
       showTutorialStep();
@@ -1151,7 +945,7 @@ function drawAndSkip() {
     const result = skipAndDraw(gameState);
     const prevIdx = gameState.currentPlayerIndex;
     gameState = result.newState;
-    if (gameState.mode === MODE.TWO_PLAYER) {
+    if (gameState.mode === 'twoPlayer') {
       gameState.currentPlayerIndex = prevIdx;
     }
     pendingRack = null;
@@ -1203,7 +997,7 @@ function animateDraw(callback, targetElId) {
   SFX.draw();
 
   const targetId = targetElId || 'rack-tiles';
-  const pile = document.getElementById(ID.DRAW_PILE);
+  const pile = document.getElementById('draw-pile');
   const target = document.getElementById(targetId);
   if (!target) { isAnimatingDraw = false; callback(); return; }
   const pileRect = pile.getBoundingClientRect();
@@ -1279,10 +1073,10 @@ function showPixelConfetti() {
 function showGameOver(winnerId) {
   stopMusic();
   hideAllScreens();
-  if (winnerId === PLAYER.P1) SFX.win(); else SFX.lose();
-  document.getElementById(ID.GAMEOVER_SCREEN).style.display = 'flex';
-  const label = winnerId === PLAYER.P1 ? 'Player 1' : (winnerId === PLAYER.P2 ? 'Player 2' : 'AI');
-  document.getElementById(ID.WINNER_TEXT).textContent = `${label} WINS!`;
+  if (winnerId === 'player1') SFX.win(); else SFX.lose();
+  document.getElementById('gameover-screen').style.display = 'flex';
+  const label = winnerId === 'player1' ? 'Player 1' : (winnerId === 'player2' ? 'Player 2' : 'AI');
+  document.getElementById('winner-text').textContent = `${label} WINS!`;
   showPixelConfetti();
 }
 
@@ -1303,13 +1097,13 @@ function showThawAnimation() {
 }
 
 function updateFrozenState() {
-  const screen = document.getElementById(ID.GAME_SCREEN);
-  if (gameState.mode === MODE.TWO_PLAYER) {
+  const screen = document.getElementById('game-screen');
+  if (gameState.mode === 'twoPlayer') {
     const current = getCurrentPlayer();
-    screen.classList.toggle(CLASS.FROZEN, current && !current.hasMelded);
+    screen.classList.toggle('frozen', current && !current.hasMelded);
   } else {
     const human = gameState.players[0];
-    screen.classList.toggle(CLASS.FROZEN, human && !human.hasMelded);
+    screen.classList.toggle('frozen', human && !human.hasMelded);
   }
 }
 
@@ -1318,7 +1112,7 @@ function renderAIHand() {
   if (!container || !gameState) return;
   container.innerHTML = '';
   let opponent;
-  if (gameState.mode === MODE.SINGLE || isTutorialMode) {
+  if (gameState.mode === 'single' || isTutorialMode) {
     opponent = gameState.players[1];
   } else {
     const currentIdx = gameState.currentPlayerIndex;
@@ -1344,9 +1138,9 @@ function renderAll() {
 function renderGameInfo() {
   const current = getCurrentPlayer();
   const players = gameState.players;
-  const turnEl = document.getElementById(ID.TURN_INDICATOR);
-  const isTwoPlayer = gameState.mode === MODE.TWO_PLAYER;
-  const isSingle = gameState.mode === MODE.SINGLE || isTutorialMode;
+  const turnEl = document.getElementById('turn-indicator');
+  const isTwoPlayer = gameState.mode === 'twoPlayer';
+  const isSingle = gameState.mode === 'single' || isTutorialMode;
 
   const displayOrder = isTwoPlayer
     ? [current, players.find(p => p.id !== current.id)]
@@ -1363,15 +1157,15 @@ function renderGameInfo() {
       infoEl.style.opacity = isCurrent ? '1' : '0.5';
     }
     if (avatarEl) {
-      avatarEl.style.backgroundImage = `url('assets/${p.id === PLAYER.P1 ? 'p1' : 'p2'}.png')`;
+      avatarEl.style.backgroundImage = `url('assets/${p.id === 'player1' ? 'p1' : 'p2'}.png')`;
       avatarEl.classList.toggle('avatar-opponent', !isCurrent);
     }
     const nameEl = document.getElementById(i === 0 ? 'name-p1' : 'name-p2');
     if (nameEl) {
       if (isSingle) {
-        nameEl.textContent = p.id === PLAYER.P1 ? 'YOU' : 'CPU';
+        nameEl.textContent = p.id === 'player1' ? 'YOU' : 'CPU';
       } else if (isTwoPlayer) {
-        nameEl.textContent = p.id === PLAYER.P1 ? 'P1' : 'P2';
+        nameEl.textContent = p.id === 'player1' ? 'P1' : 'P2';
       } else {
         nameEl.textContent = i === 0 ? 'P1' : 'P2';
       }
@@ -1379,11 +1173,11 @@ function renderGameInfo() {
   });
 
   if (current && turnEl) {
-    const label = current.id === PLAYER.P1 ? 'Player 1' : (current.id === PLAYER.P2 ? 'Player 2' : 'AI');
+    const label = current.id === 'player1' ? 'Player 1' : (current.id === 'player2' ? 'Player 2' : 'AI');
     turnEl.textContent = isTutorialMode ? `Tutorial - ${label}` : `Turn: ${label}`;
   }
 
-  const meldEl = document.getElementById(ID.MELD_STATUS);
+  const meldEl = document.getElementById('meld-status');
   if (meldEl) {
     if (isTutorialMode) {
       const hints = {
@@ -1404,27 +1198,24 @@ function renderGameInfo() {
     }
   }
 
-  const poolEl = document.getElementById(ID.POOL_INFO);
+  const poolEl = document.getElementById('pool-info');
   if (poolEl) poolEl.textContent = `Pool: ${gameState.pool.length}`;
 
-  const pileCount = document.getElementById(ID.PILE_COUNT);
-  const drawPile = document.getElementById(ID.DRAW_PILE);
+  const pileCount = document.getElementById('pile-count');
+  const drawPile = document.getElementById('draw-pile');
   if (pileCount) pileCount.textContent = `${gameState.pool.length}`;
   if (drawPile) {
     if (gameState.pool.length === 0) {
-      drawPile.classList.add(CLASS.DISABLED, CLASS.EMPTY);
-    } else if (awaitingPass) {
-      drawPile.classList.add(CLASS.DISABLED);
-      drawPile.classList.remove(CLASS.EMPTY);
+      drawPile.classList.add('disabled', 'empty');
     } else {
-      drawPile.classList.remove(CLASS.DISABLED, CLASS.EMPTY);
+      drawPile.classList.remove('disabled', 'empty');
     }
   }
 }
 
 function renderBoard() {
-  const container = document.getElementById(ID.BOARD_GROUPS);
-  const isAiTurn = isProcessing && gameState.players[gameState.currentPlayerIndex]?.id === PLAYER.AI;
+  const container = document.getElementById('board-groups');
+  const isAiTurn = isProcessing && gameState.players[gameState.currentPlayerIndex]?.id === 'AI';
   const displayGroups = pendingBoard !== null ? pendingBoard : gameState.board;
   container.innerHTML = '';
 
@@ -1438,31 +1229,9 @@ function renderBoard() {
   displayGroups.forEach((group, idx) => {
     const groupEl = document.createElement('div');
     groupEl.className = 'board-group';
-    if (idx === selectedGroupIdx && !isAiTurn) groupEl.classList.add(CLASS.SELECTED);
-    const contentValid = group.length < 3 ? false : isValidGroup(group);
-    let orderValid = true;
-    if (contentValid && group.length >= 3) {
-      const nonJokers = group.filter(t => !t.isJoker);
-      const allSameColor = nonJokers.length > 0 && group.every(t => t.isJoker || t.color === nonJokers[0].color);
-      if (allSameColor) {
-        const njValSet = new Set(nonJokers.map(t => t.value));
-        let firstNJIdx = -1, firstNJVal = -1;
-        for (let i = 0; i < group.length; i++) {
-          if (!group[i].isJoker) { firstNJIdx = i; firstNJVal = group[i].value; break; }
-        }
-        const base = firstNJVal - firstNJIdx;
-        for (let i = 0; i < group.length; i++) {
-          const expected = base + i;
-          if (group[i].isJoker) {
-            if (njValSet.has(expected)) { orderValid = false; break; }
-          } else if (group[i].value !== expected) {
-            orderValid = false; break;
-          }
-        }
-      }
-    }
-    const isValid = contentValid && orderValid;
-    if (!isValid && pendingBoard && !isAiTurn) groupEl.classList.add(CLASS.INVALID);
+    if (idx === selectedGroupIdx && !isAiTurn) groupEl.classList.add('selected');
+    const isValid = group.length < 3 ? false : isValidGroup(group);
+    if (!isValid && pendingBoard && !isAiTurn) groupEl.classList.add('invalid');
     groupEl.dataset.index = idx;
 
     const canSelect = !isAiTurn;
@@ -1478,17 +1247,17 @@ function renderBoard() {
 }
 
 function renderRack() {
-  const container = document.getElementById(ID.RACK_TILES);
+  const container = document.getElementById('rack-tiles');
   container.innerHTML = '';
 
   const currentPlayer = gameState.players[gameState.currentPlayerIndex];
 
   let rack;
-  if (currentPlayer?.id === PLAYER.AI) {
+  if (currentPlayer?.id === 'AI') {
     rack = gameState.players[0].rack;
   } else if (pendingRack !== null) {
     rack = pendingRack;
-  } else if (gameState.mode === MODE.SINGLE) {
+  } else if (gameState.mode === 'single') {
     rack = gameState.players[0].rack;
   } else {
     rack = currentPlayer?.rack || [];
@@ -1515,7 +1284,7 @@ function renderRack() {
 }
 
 function renderPending() {
-  const container = document.getElementById(ID.PENDING_AREA);
+  const container = document.getElementById('pending-area');
   container.style.display = 'none';
 }
 
@@ -1542,7 +1311,7 @@ function createTileElement(tile, opts = {}) {
     div.style.opacity = '0';
   }
 
-  const isAiTurn = gameState && gameState.players[gameState.currentPlayerIndex]?.id === PLAYER.AI;
+  const isAiTurn = gameState && gameState.players[gameState.currentPlayerIndex]?.id === 'AI';
   if (!isProcessing && !isAiTurn) {
     div.draggable = true;
   }
@@ -1557,7 +1326,7 @@ function createTileElement(tile, opts = {}) {
       const colorLabel = COLOR_LABELS[repr.color] || repr.color[0].toUpperCase();
       div.innerHTML = `<span class="tile-value"></span><span class="tile-sub">${colorLabel}${repr.value}</span>`;
     } else {
-      div.innerHTML = '<span class="tile-value">?</span>';
+      div.innerHTML = '<span class="tile-value"></span>';
     }
   } else {
     div.innerHTML = `<span class="tile-value">${tile.value}</span>`;
@@ -1567,25 +1336,17 @@ function createTileElement(tile, opts = {}) {
 }
 
 function updateControls() {
-  if (awaitingPass) {
-    document.getElementById(ID.SUBMIT_BTN).disabled = true;
-    document.getElementById(ID.CANCEL_BTN).disabled = true;
-    document.getElementById(ID.DRAW_BTN).disabled = true;
-    const dp = document.getElementById(ID.DRAW_PILE);
-    if (dp) dp.classList.add(CLASS.DISABLED);
-    return;
-  }
   const hasPending = pendingRack && originalRackIds && (originalRackIds.length > pendingRack.length);
-  const drawDisabled = isProcessing || awaitingPass || awaitingInitialMeld || awaitingJokerPlay;
-  document.getElementById(ID.SUBMIT_BTN).disabled = !hasPending || isProcessing || awaitingPass || awaitingDraw;
-  document.getElementById(ID.CANCEL_BTN).disabled = !hasPending || isProcessing || awaitingPass || awaitingDraw;
-  document.getElementById(ID.DRAW_BTN).disabled = drawDisabled;
-  const drawPile = document.getElementById(ID.DRAW_PILE);
+  const drawDisabled = isProcessing || awaitingInitialMeld || awaitingJokerPlay;
+  document.getElementById('submit-btn').disabled = !hasPending || isProcessing || awaitingDraw;
+  document.getElementById('cancel-btn').disabled = !hasPending || isProcessing || awaitingDraw;
+  document.getElementById('draw-btn').disabled = drawDisabled;
+  const drawPile = document.getElementById('draw-pile');
   if (drawPile) {
     if (drawDisabled || gameState.pool.length === 0) {
-      drawPile.classList.add(CLASS.DISABLED);
+      drawPile.classList.add('disabled');
     } else {
-      drawPile.classList.remove(CLASS.DISABLED);
+      drawPile.classList.remove('disabled');
     }
   }
 }
@@ -1619,8 +1380,8 @@ let tutorialQueue = [];
 let tutorialStep = 0;
 
 function startTutorial() {
-  const overlay = document.getElementById(ID.TUTORIAL_OVERLAY);
-  overlay.classList.add(CLASS.ACTIVE);
+  const overlay = document.getElementById('tutorial-overlay');
+  overlay.classList.add('active');
   tutorialQueue = [...tutorialScript];
   tutorialStep = 0;
   showTutorialStep();
@@ -1632,23 +1393,23 @@ function showTutorialStep() {
     return;
   }
 
-  const dialog = document.getElementById(ID.TUTORIAL_DIALOG);
+  const dialog = document.getElementById('tutorial-dialog');
   dialog.classList.toggle('tutorial-tile-step', tutorialStep === 1 || tutorialStep === 2);
 
   const step = tutorialQueue[tutorialStep];
   const emojiMap = { '😊': 'normal', '🥳': 'happy', '😮': 'surprised', '🤔': 'thinking' };
   document.getElementById('tutorial-emoji').src = 'assets/' + (emojiMap[step.emoji] || 'normal') + '.png';
-  document.getElementById(ID.TUTORIAL_TEXT).textContent = step.text;
+  document.getElementById('tutorial-text').textContent = step.text;
 
   const avatar = document.getElementById('tutorial-avatar');
   avatar.classList.remove('boing');
   void avatar.offsetWidth;
   avatar.classList.add('boing');
 
-  const existingGrid = document.getElementById(ID.TUTORIAL_TILE_GRID);
+  const existingGrid = document.getElementById('tutorial-tile-grid');
   if (existingGrid) existingGrid.remove();
 
-  const overlay = document.getElementById(ID.TUTORIAL_OVERLAY);
+  const overlay = document.getElementById('tutorial-overlay');
   overlay.classList.remove('has-spotlight');
   overlay.style.removeProperty('--spotlight-x');
   overlay.style.removeProperty('--spotlight-y');
@@ -1693,7 +1454,7 @@ function showTutorialStep() {
     }
     grid.appendChild(jokerRow);
 
-    document.getElementById(ID.TUTORIAL_CONTENT).insertBefore(grid, document.getElementById(ID.TUTORIAL_BUTTONS));
+    document.getElementById('tutorial-content').insertBefore(grid, document.getElementById('tutorial-buttons'));
   }
 
   if (tutorialStep === 3 | tutorialStep === 7) {
@@ -1701,7 +1462,7 @@ function showTutorialStep() {
     const h = window.innerHeight;
     const sw = 900, sh = 90, bottom = 10;
     const offsetFromCenter = 30;
-    overlay.classList.add(CLASS.HAS_SPOTLIGHT);
+    overlay.classList.add('has-spotlight');
     overlay.style.setProperty('--spotlight-x', ((w - sw) / 2 + offsetFromCenter ) + 'px');
     overlay.style.setProperty('--spotlight-y', (h - sh - bottom) + 'px');
     overlay.style.setProperty('--spotlight-w', sw + 'px');
@@ -1712,7 +1473,7 @@ function showTutorialStep() {
     const w = window.innerWidth;
     const h = window.innerHeight;
     const sw = 200, sh = 90, bottom = 10;
-    overlay.classList.add(CLASS.HAS_SPOTLIGHT);
+    overlay.classList.add('has-spotlight');
     const offsetFromCenter = -320;
     overlay.style.setProperty('--spotlight-x', ((w - sw) / 2 + offsetFromCenter) + 'px');
     overlay.style.setProperty('--spotlight-y', (h - sh - bottom) + 'px');
@@ -1724,7 +1485,7 @@ function showTutorialStep() {
     const w = window.innerWidth;
     const h = window.innerHeight;
     const sw = 400, sh = 90, top = 90;
-    overlay.classList.add(CLASS.HAS_SPOTLIGHT);
+    overlay.classList.add('has-spotlight');
     const offsetFromCenter = -540;
     overlay.style.setProperty('--spotlight-x', ((w - sw) / 2 + offsetFromCenter) + 'px');
     overlay.style.setProperty('--spotlight-y', top + 'px');
@@ -1737,7 +1498,7 @@ function showTutorialStep() {
     const w = window.innerWidth;
     const h = window.innerHeight;
     const sw = 100, sh = 120, right = 10;
-    overlay.classList.add(CLASS.HAS_SPOTLIGHT);
+    overlay.classList.add('has-spotlight');
     overlay.style.setProperty('--spotlight-x', (w - sw - right) + 'px');
     overlay.style.setProperty('--spotlight-y', ((h - sh) / 2) + 'px');
     overlay.style.setProperty('--spotlight-w', sw + 'px');
@@ -1748,7 +1509,7 @@ function showTutorialStep() {
     const w = window.innerWidth;
     const h = window.innerHeight;
     const sw = 80, sh = 90, bottom = 10;
-    overlay.classList.add(CLASS.HAS_SPOTLIGHT);
+    overlay.classList.add('has-spotlight');
     const offsetFromCenter = 370;
     overlay.style.setProperty('--spotlight-x', ((w - sw) / 2 + offsetFromCenter) + 'px');
     overlay.style.setProperty('--spotlight-y', (h - sh - bottom) + 'px');
@@ -1757,7 +1518,7 @@ function showTutorialStep() {
   }
 
 
-  const btnContainer = document.getElementById(ID.TUTORIAL_BUTTONS);
+  const btnContainer = document.getElementById('tutorial-buttons');
   btnContainer.innerHTML = '';
 
   if (step.buttons === 'yesno') {
@@ -1777,8 +1538,8 @@ function showTutorialStep() {
       SFX.button();
       endTutorial();
       startTutorialGame();
-      const overlay = document.getElementById(ID.TUTORIAL_OVERLAY);
-      overlay.classList.add(CLASS.ACTIVE);
+      const overlay = document.getElementById('tutorial-overlay');
+      overlay.classList.add('active');
       tutorialQueue = [...tutorialNo];
       tutorialStep = 0;
       showTutorialStep();
@@ -1806,13 +1567,13 @@ function showTutorialStep() {
       } else if (tutorialStep === 10) {
         endTutorial();
         awaitingJokerPlay = true;
-        document.getElementById(ID.DRAW_BTN).disabled = true;
+        document.getElementById('draw-btn').disabled = true;
         updateControls();
         renderAll();
       } else if (tutorialStep === 4) {
         endTutorial();
         awaitingInitialMeld = true;
-        document.getElementById(ID.DRAW_BTN).disabled = true;
+        document.getElementById('draw-btn').disabled = true;
         updateControls();
         renderAll();
       } else {
@@ -1825,7 +1586,7 @@ function showTutorialStep() {
 }
 
 function endTutorial() {
-  const overlay = document.getElementById(ID.TUTORIAL_OVERLAY);
+  const overlay = document.getElementById('tutorial-overlay');
   overlay.classList.remove('active');
   overlay.classList.remove('has-spotlight');
   const extra = document.getElementById('spotlight-hole-2');
@@ -1858,10 +1619,10 @@ function disableTutorialMode() {
 
   if (gameState) {
     const current = gameState.players[gameState.currentPlayerIndex];
-    if (current?.id === PLAYER.AI) {
+    if (current?.id === 'AI') {
       isProcessing = false;
       startTurn();
-    } else if (current?.id === PLAYER.P1) {
+    } else if (current?.id === 'player1') {
       gameState.currentPlayerIndex = 1;
       isProcessing = false;
       startTurn();
@@ -1874,7 +1635,7 @@ function disableTutorialMode() {
 setTimeout(startTutorial, 200);
 
 function showMessage(msg, type = 'info') {
-  const el = document.getElementById(ID.MESSAGE_AREA);
+  const el = document.getElementById('message-area');
   el.textContent = msg;
   el.className = type;
   el.style.display = 'block';
